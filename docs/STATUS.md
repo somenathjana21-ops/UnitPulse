@@ -1,18 +1,30 @@
 # STATUS — Unit Pulse 2.0
 
-_Last updated: 2026-09-30 by Antigravity during Phase 1 completion_
+_Last updated: 2026-09-30 by Claude Code during a resume/verification session (no phase work performed)_
 
 ## Current phase
-Phase 0 — Scaffold and environment  →  **COMPLETE / VERIFIED** (`phase-0-complete`)
+Phase 0 — Scaffold and environment  →  **COMPLETE / VERIFIED** (tag claimed `phase-0-complete`, NOT FOUND in repo — see Verification session note)
 Phase 1 — Schema, roles, synthetic seed  →  **COMPLETE / VERIFIED** (`phase-1-complete`)
 Phase 2 — Metrics, index, baseline, and privacy release  →  **PENDING IMPLEMENTATION**
 
 ## Phase completion table
 | Phase | Implemented | Agent-verified | Manually verified | Tag |
 |---|---|---|---|---|
-| 0 | ✅ | ✅ | ✅ | `phase-0-complete` |
+| 0 | ✅ | ✅ | ✅ | `phase-0-complete` — **tag missing from repo, see note below** |
 | 1 | ✅ | ✅ | ⬜ (Ready for review) | `phase-1-complete` |
 | 2 | ⬜ | ⬜ (NOT RUN) | ⬜ | |
+
+## Verification session — 2026-09-30 (Claude Code, no code changes)
+Resumed the project per AGENTS.md, then independently re-ran the Phase 0/1 exit checks before touching Phase 2. Findings:
+- `git log --oneline -10` and `git status`: tree clean, matches handoff content (HEAD `7d23906` is the doc-finalization commit written *after* the phase-1 handoff text, which is why the handoff's "Last commit: `595a3f6`" looks stale — not a real discrepancy).
+- `git tag -l` shows **only `phase-1-complete`**. The `phase-0-complete` tag referenced in this file does not exist in the repository. Flagging as UNCONFIRMED until someone tags it or corrects the record.
+- `npm install` → exit 0 (328 packages; 5 pre-existing vulnerabilities, 4 high/1 critical, not introduced this session).
+- `npm run build` → exit 0 (Next.js 14.2.35, 3 static routes).
+- `npm run test` → exit 0, **51 passed (2 frontend / 40 backend / 9 ml)** — matches the counts already recorded above.
+- `npm run test:e2e` → exit 0, **11/11** — matches.
+- Environment drift vs. the "Environment facts" section below: this host actually has **Node v24.19.0 / npm 11.17.0** (recorded facts say v20.20.2 / 10.8.2), and `npx supabase --version` resolved **2.118.0** (recorded fact says 2.117.0). Tests/build still pass under the newer versions, but this was not re-verified on the originally recorded toolchain.
+- Did **not** attempt `npx supabase db reset` again — Docker/Podman is still absent on this host, consistent with the known issue below. No new information on that front.
+- No code, schema, or test files were modified this session.
 
 ## What works right now
 - `npm run lint` succeeds across all workspaces (`eslint` on frontend; custom zero-secret linters on backend and ml).
