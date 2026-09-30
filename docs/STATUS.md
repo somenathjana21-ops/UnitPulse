@@ -3,7 +3,7 @@
 _Last updated: 2026-09-30 by Claude Code during Phase 3 completion + verification pass_
 
 ## Current phase
-Phase 0 — Scaffold and environment  →  **COMPLETE / VERIFIED** (tag claimed `phase-0-complete`, NOT FOUND in repo — see note below)
+Phase 0 — Scaffold and environment  →  **COMPLETE / VERIFIED** (tag `phase-0-complete` verified in repo)
 Phase 1 — Schema, roles, synthetic seed  →  **COMPLETE / VERIFIED** (`phase-1-complete`)
 Phase 2 — Metrics, index, baseline, and privacy release  →  **COMPLETE / AGENT-VERIFIED** (`phase-2-complete`)
 Phase 3 — Commander dashboard and walkthrough  →  **COMPLETE / AGENT-VERIFIED** (tag `phase-3-complete`)
@@ -12,14 +12,14 @@ Phase 4 — Weekly report and welfare workflow  →  **PENDING IMPLEMENTATION**
 ## Phase completion table
 | Phase | Implemented | Agent-verified | Manually verified | Tag |
 |---|---|---|---|---|
-| 0 | ✅ | ✅ | ✅ | `phase-0-complete` — **tag missing from repo, unresolved** |
+| 0 | ✅ | ✅ | ✅ | `phase-0-complete` |
 | 1 | ✅ | ✅ | ⬜ (Ready for review) | `phase-1-complete` |
 | 2 | ✅ | ✅ | ⬜ (Ready for review) | `phase-2-complete` |
 | 3 | ✅ | ✅ | ⬜ (Ready for review — see honest gaps below) | `phase-3-complete` |
 | 4 | ⬜ | ⬜ (NOT RUN) | ⬜ | |
 
 ## What works right now
-- `npm run lint` succeeds across all workspaces (ESLint on frontend; custom zero-secret linters on backend [9 files] and ml [7 files]).
+- `npm run lint` succeeds across all workspaces (ESLint on frontend; custom zero-secret linters on backend [9 files] and ml [6 files]).
 - `npm run test` succeeds with **96 passed tests** (was 73 at end of Phase 2):
   - 25 frontend tests (was 2): commander view-model (band mapping, suppression wording, evidence/action cards, API payload shaping, no-leak-on-malicious-input), authorization (401/404 verdicts, no existence oracle for guessed unit IDs), and repository functions against a fake Supabase client (never returns a unit outside the requested scope).
   - 54 backend tests — unchanged from Phase 2.
@@ -27,8 +27,13 @@ Phase 4 — Weekly report and welfare workflow  →  **PENDING IMPLEMENTATION**
 - `npm run test:e2e` passes **15/15** (was 13/13): added a Phase 3 file-existence check and a functional smoke test (cross-unit denial + no forbidden field in an API payload built from a deliberately "leaky" source row).
 - `npm run build` succeeds; `/commander`, `/commander/units/[id]`, and both `/api/commander/units*` routes all compile as dynamic (ƒ) — never statically prerendered, confirmed in the build output itself.
 - **New this phase**: `/commander` (unit-card grid) and `/commander/units/[id]` (weekly trend + evidence + deterministic suggested actions) as real Next.js Server Components using real Supabase Auth (`@supabase/ssr`) — not a mock or bypass. `GET /api/commander/units[/:unitId]` route handlers match docs/08's response shape. `frontend/src/middleware.js` enforces `Cache-Control: no-store` on both.
-- The entire authorization/data-shaping layer (`frontend/src/lib/commander/`) is pure and unit-tested independent of Next.js request context or a live database — the same pattern established in Phases 1-2.
-- **Manually re-verified for real** (not just code review): started `npm run dev`, used `curl` against the running server. Confirmed: `GET /commander` → 200 with a graceful "Backend not configured" message (no crash, no fake auth bypass); `GET /api/commander/units` → 503 with the correct JSON error shape; `Cache-Control: no-store, must-revalidate` present on both the page and API responses.
+| Command | Exit code | Notes |
+|---|---|---|
+| `npm run lint` | 0 | ESLint clean on frontend; zero-secret lint clean on backend (9 files) & ml (6 files) |
+| `npm run test` | 0 | 96 passed (25 frontend, 54 backend, 17 ml) |
+| `npm run test:e2e` | 0 | 15/15 |
+| `npm run build` | 0 | `/commander`, `/commander/units/[id]`, and both API routes all render as dynamic (ƒ), never statically prerendered |
+| `npm run dev` + `curl` | — | Manual, real HTTP verification (see below) — not an automated command, recorded for the record |
 
 ## Independent Phase 3 verification pass (Guidebook verification prompt, run this session)
 Per: "Inspect both HTML and network responses for names, person IDs, raw metrics, hidden small-group counts, location details, and private case notes. Verify keyboard interaction and text alternatives for chart colors. Check cache headers and confirm a role-specific page is not statically cached or shared between users. Report browser tests actually run."
@@ -42,7 +47,7 @@ Per: "Inspect both HTML and network responses for names, person IDs, raw metrics
 - **Browser tests actually run**: **none.** What was actually run: `curl` against a live `npm run dev` process (real HTTP, real headers, real status codes, real rendered HTML — but only for the unauthenticated/not-configured states), plus 96 Node.js unit/logic tests. No DOM was ever rendered in a browser or inspected visually this session.
 
 ## What does NOT work / not implemented yet
-- **The commander dashboard has never run against real data.** No live Supabase/Postgres instance exists on this host (Docker/Podman still not installed — same blocker carried since Phase 1). Every Supabase-calling code path (`repository.js`'s actual queries, real session auth) is real production code, never executed against a live database.
+- **The commander dashboard has never run against real data.** No live Supabase/Postgres instance was connected on this host. Every Supabase-calling code path (`repository.js`'s actual queries, real session auth) is real production code, never executed against a live database.
 - No browser-based accessibility or visual testing was performed (see verification pass above).
 - `scripts/seed-demo.js` still fabricates weekly metrics directly rather than deriving them via `metrics.js`/`release.js` — unchanged since Phase 2, still an open question below.
 - Welfare inbox and report detail UI (`/welfare`, scheduled for Phase 4).
@@ -51,12 +56,12 @@ Per: "Inspect both HTML and network responses for names, person IDs, raw metrics
 - AI adapter and briefing generation (Phase 5). Note: `buildSuggestedActions()` in `frontend/src/lib/commander/view-model.js` already implements the deterministic-fallback *style* of action text from docs/07, ahead of schedule — Phase 5 should reuse it as the fallback template rather than duplicating it (D-23).
 
 ## Known issues
-- Docker Desktop or Podman is not installed on this host environment. Local database commands fail; nothing built so far (Phases 1-3) has ever run against a live Postgres/Supabase instance.
-- The `phase-0-complete` git tag referenced in this file does not exist in the repository (unresolved since an earlier verification session).
+- Docker Desktop or Podman is not installed on this host environment. Remote hosted Supabase is preferred by the user to avoid Docker.
+- `phase-0-complete` git tag was missing from repo — **RESOLVED** on 2026-09-30 (tagged commit `7b9783a`).
 - `frontend/src/middleware.js`'s matcher only covers `/commander/*` and `/api/commander/*` — Phase 4 must extend it for `/welfare/*` or those routes won't get `no-store`.
 
 ## Environment facts the next agent needs
-- This host: Node v24.19.0, npm 11.17.0. npm workspaces. Root `package.json` contains `"type": "module"`.
+- This host: Node v20.20.2, npm 10.8.2. npm workspaces. Root `package.json` contains `"type": "module"`. (Note: `@supabase/auth-js` logs engine warnings recommending Node >= 22.0.0, but builds and tests pass cleanly).
 - New frontend dependencies this phase: `@supabase/ssr`, `@supabase/supabase-js`.
 - No `frontend/.env.local` exists on this host — `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` are unset, so `isSupabaseConfigured()` is false and commander pages/routes render/return the graceful "not configured" state (D-22).
 - Real test results: `tests/results/phase-1-2026-09-30.txt`, `phase-2-2026-09-30.txt`, `phase-3-2026-09-30.txt`.
@@ -70,7 +75,6 @@ Per: "Inspect both HTML and network responses for names, person IDs, raw metrics
 - One Phase 1 test caught a real mistake during implementation: `backend/tests/permissions.test.js`'s Hostile Scenario 2 scans all of `frontend/src` for the literal string naming the elevated Supabase credential — a warning comment in the new `frontend/src/lib/supabase/server.js` originally spelled that string out and tripped the check. Reworded the comment rather than weakening the test.
 
 ## Open questions for the human
-- Confirm whether local testing will use Docker Desktop/Podman or a remote hosted Supabase project — carried over from Phase 1/2, and now also blocks ever manually verifying the Phase 3 dashboard against real data or a real keyboard/screen-reader pass.
+- User confirmed remote hosted Supabase will be used (no local Docker). Next step is linking the project and pushing migrations/seed.
 - Should `scripts/seed-demo.js` be rewritten to derive `unitWeekMetrics`/`unitWeekReleases` from raw records via `backend/src/metrics.js` + `release.js`? Carried over from Phase 2, unresolved.
-- Resolve the missing `phase-0-complete` git tag.
 - Would you like a Claude in Chrome pass in a future session to empirically verify keyboard navigation and screen-reader behavior on `/commander`, once either a live Supabase project exists or a decision is made about how to demo this phase without one?
