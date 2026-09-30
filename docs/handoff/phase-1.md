@@ -1,13 +1,13 @@
 # Handoff — Phase 1: Schema, Roles, and Synthetic Seed
 
 **Written by:** Antigravity on 2026-09-30  
-**Git tag:** `phase-1-complete`  
+**Git tag:** `phase-1-complete`  **Last commit:** `595a3f6`  
 **Status:** Phase 1 Complete and Verified across all automated test suites.
 
 ## Summary (3 lines max)
 Phase 1 Supabase SQL migration, private/public schema boundaries, RLS policies, and narrow role provisioning are implemented.
 Deterministic synthetic seed generator produces 6 fictional units, 360 personnel, 180 days of records, and 12 weekly snapshots (1 elevated, 1 stable).
-Automated tests (42 unit tests, 11 e2e checks) confirm anonymous and commander users cannot access raw data, another unit's release, or welfare reports.
+Automated tests (51 unit tests, 11 e2e checks) confirm anonymous and commander users cannot access raw data, another unit's release, or welfare reports.
 
 ## Files created / changed
 - `supabase/migrations/20260930120000_phase1_initial_schema.sql` — Private source tables, public release/report tables, RLS policies, partial unique index, role provisioning, and break-glass function.
@@ -17,7 +17,7 @@ Automated tests (42 unit tests, 11 e2e checks) confirm anonymous and commander u
 - `backend/src/index.js` — Re-exports permissions module.
 - `backend/package.json` — Exports `./permissions`.
 - `package.json` — Added `"type": "module"` for clean script execution.
-- `backend/tests/permissions.test.js` — 25 permission and schema invariant tests.
+- `backend/tests/permissions.test.js` — 25 permission and schema invariant tests + 9 hostile penetration scenario tests.
 - `scripts/test-e2e.js` — Updated with Phase 1 migration, seed, and permission assertions (11/11 passing).
 - `docs/STATUS.md` — Updated with Phase 1 completion details and exact test counts.
 - `docs/15-decision-log.md` — Appended decisions D-15, D-16, and D-17.
@@ -28,7 +28,7 @@ Automated tests (42 unit tests, 11 e2e checks) confirm anonymous and commander u
 | Command | Exit code | Notes |
 |---|---|---|
 | `npm run lint` | 0 | ESLint passed on frontend; zero-secret lint passed on backend & ml |
-| `npm run test` | 0 | 42 passed (2 frontend, 31 backend, 9 ml) |
+| `npm run test` | 0 | 51 passed (2 frontend, 40 backend, 9 ml) |
 | `npm run test:e2e` | 0 | 11 passed (all Phase 0 and Phase 1 security & structure assertions) |
 | `npm run build` | 0 | Next.js 14 production build compiled successfully |
 | `npm run seed:demo` | 0 | Generated 6 units, 360 personnel, 65k duties, 12 weeks, 1 elevated, 1 stable, wrote 2.9MB `supabase/seed.sql` |
