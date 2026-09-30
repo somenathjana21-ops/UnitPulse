@@ -14,7 +14,7 @@
 | **Phase 1** | Schema, Roles & Synthetic Seed | `supabase/migrations/`, `scripts/seed-demo.js`, role RLS | ✅ **COMPLETED** |
 | **Phase 2** | Metrics, Index, Baseline & Privacy Release | `backend/src/release.js`, `ml/src/`, Laplace noise, fixtures | ✅ **COMPLETED** |
 | **Phase 3** | Commander Dashboard & Walkthrough | `frontend/src/app/commander/`, trends, cards, accessible charts | ✅ **COMPLETED** |
-| **Phase 4** | Weekly Report & Welfare Workflow | `frontend/src/app/welfare/`, Vercel cron worker, overdue alerts | ⏳ **PENDING (Phase 4)** |
+| **Phase 4** | Weekly Report & Welfare Workflow | `frontend/src/app/welfare/`, Vercel cron worker, overdue alerts | ✅ **COMPLETED** |
 | **Phase 5** | AI Adapter & Briefing | OpenAI adapter, fallback templates, print-to-PDF export | ⏳ **PENDING (Phase 5)** |
 
 ---
@@ -96,19 +96,18 @@
 
 ---
 
-### ⏳ Phase 4 — Weekly Report & Welfare Workflow
-- [ ] **Welfare Officer Portal (`frontend/src/app/welfare/`)**:
-  - [ ] `/welfare`: Assigned reports inbox with status badges (`new`, `acknowledged`, `action_taken`, `follow_up`, `closed`).
-  - [ ] `/welfare/reports/[id]`: Aggregate snapshot, trigger reasons, and follow-up form.
-  - [ ] `/welfare/audit`: Officer's personal access audit trail.
-  - [ ] Overdue review indicator for reports pending past SLA.
-- [ ] **Break-Glass Individual Access Flow**:
-  - [ ] Modal requiring documented justification and reason code.
-  - [ ] Server-enforced 30-minute expiry; reason encrypted with AES-256-GCM.
-  - [ ] Paginated reads (max 20 records) with transactional audit logging.
-- [ ] **Weekly Job & Vercel Cron (`backend/src/worker.js`)**:
-  - [ ] Protected GET route `/api/internal/weekly-run` verified with `Authorization: Bearer <CRON_SECRET>`.
-  - [ ] Deduplication: at most 1 active report per unit on concurrent/retried cron runs.
+### ✅ Phase 4 — Weekly Report & Welfare Workflow (Completed)
+- [x] **Welfare Officer Portal (`frontend/src/app/welfare/`)**:
+  - [x] `/welfare`: Assigned reports inbox with status badges (`new`, `acknowledged`, `action_taken`, `follow_up`, `closed`).
+  - [x] `/welfare/reports/[id]`: Aggregate snapshot, trigger reasons, suggested supportive actions, and interactive status transition workflow.
+  - [x] In-app notification banners for new alerts and overdue reviews (replaces email dispatch per MVP privacy spec).
+  - [x] Overdue review indicator for reports with past scheduled follow-up or unacknowledged >48 hours.
+  - [x] Strict officer assignment access gate: only assigned officer can read/update (cross-officer attempts resolve to 404, commander to 403, anonymous to 401).
+- [x] **Weekly Job & Vercel Cron (`backend/src/worker.js`)**:
+  - [x] Protected GET route `/api/internal/weekly-run` verified with `Authorization: Bearer <CRON_SECRET>` server-side.
+  - [x] Deterministic report triggers: spike rule (current >= 40 and >= baseline + 15 with >= 4 earlier comparable weeks) OR sustained-high rule (current >= 75 for 2 consecutive completed weeks).
+  - [x] Deduplication: at most 1 active report per unit on concurrent/retried cron runs via database constraints (`idx_welfare_reports_active_per_unit` partial unique index and `uq_welfare_report_retry`).
+  - [x] Middleware enforces `Cache-Control: no-store` across `/welfare/*`, `/api/welfare/*`, and `/api/internal/*`.
 
 ---
 

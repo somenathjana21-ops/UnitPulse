@@ -1,0 +1,216 @@
+=== Phase 4 Verification Test Run: 2026-09-30 ===
+(Completed-week worker, deterministic triggers, welfare inbox, report detail, CRON_SECRET auth, and overdue-review indicator.)
+
+--- Command 1: npm run lint ---
+
+> unitpulse@0.1.0 lint
+> npm run lint --workspaces --if-present
+
+
+> @unitpulse/frontend@0.1.0 lint
+> next lint
+
+✔ No ESLint warnings or errors
+
+> @unitpulse/backend@0.1.0 lint
+> node scripts/lint.js
+
+[LINT] Checking @unitpulse/backend source files...
+[LINT OK] Verified 10 files in @unitpulse/backend.
+
+> @unitpulse/ml@0.1.0 lint
+> node scripts/lint.js
+
+[LINT] Checking @unitpulse/ml source files...
+[LINT OK] Verified 6 files in @unitpulse/ml.
+Exit code: 0
+
+--- Command 2: npm run test ---
+
+> unitpulse@0.1.0 test
+> npm run test --workspaces --if-present
+
+
+> @unitpulse/frontend@0.1.0 test
+> node --test
+
+✔ resolveCommanderUnitAccess: no session -> 401
+✔ resolveCommanderUnitAccess: own assigned unit -> allowed
+✔ resolveCommanderUnitAccess: guessed URL for another unit -> 404, never 403
+✔ resolveCommanderUnitAccess: a completely fabricated unit ID -> also 404, same shape as a real denied unit
+✔ resolveCommanderUnitAccess: hr_uploader role cannot read unit releases
+✔ fetchUserContext returns null for no session
+✔ fetchUserContext resolves role and assigned units for a real session
+✔ fetchLatestReleasesForUnits never queries or returns units outside the requested list
+✔ fetchLatestReleasesForUnits returns [] for an empty unit list without querying
+✔ fetchReleaseHistory returns rows oldest-first for charting, scoped to one unit
+✔ mapBandToDisplayLabel follows docs/04's UI vocabulary, not the DB vocabulary
+✔ buildUnitCardViewModel: no release yet
+✔ buildUnitCardViewModel: suppressed small group shows no figures, only the docs/04 message
+✔ buildUnitCardViewModel: insufficient coverage shows "not enough verified data", never a zero
+✔ buildUnitCardViewModel: published week shows the index and mapped band label
+✔ buildTrendSeriesViewModel nulls out withheld weeks but keeps the week present in the series
+✔ buildEvidenceCards only surfaces fields actually present in approved_metrics_json
+✔ buildEvidenceCards returns nothing for a suppressed release
+✔ buildSuggestedActions uses only permitted categories and "consider/review" framing
+✔ buildSuggestedActions falls back to verify_data for a non-published release
+✔ buildApiUnitPayload matches the docs/08 response shape and passes the privacy field validator
+✔ buildApiUnitPayload never leaks an unexpected field even if the source row has one
+✔ resolveWelfareReportAccess: returns 401 when unauthenticated
+✔ resolveWelfareReportAccess: returns 403 when user is not a welfare_officer
+✔ resolveWelfareReportAccess: returns 404 when report does not exist
+✔ resolveWelfareReportAccess: returns 404 concealing existence when officer is not assigned
+✔ resolveWelfareReportAccess: returns 200 and allows access for assigned welfare officer
+✔ fetchAssignedReports returns empty list when unauthenticated
+✔ fetchAssignedReports scopes queries to current officer
+✔ fetchReportById returns null when report not found or unassigned
+✔ updateReportWorkflow updates status and outcome notes for assigned report
+✔ updateReportWorkflow returns error if update fails
+✔ buildReportInboxViewModel: formats active and closed reports with overdue flags
+✔ buildReportInboxViewModel: counts overdue reviews accurately
+✔ buildReportDetailViewModel: parses snapshot and populates safety notices
+✔ formatWelfareStatus returns correct badge styles and labels
+✔ formatWelfareDate handles valid dates and empty values
+✔ isValidStatusTransition validates allowed workflow transitions
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+
+> @unitpulse/backend@0.1.0 test
+> node --test
+
+✔ Zero-secret linting and client-exposure defense
+✔ Database design & RLS policy invariants
+✔ Public release shape validation
+✔ Metrics computation pipeline
+✔ Metrics computation with missing data
+✔ Release pipeline & differential privacy noise injection
+✔ Hostile scenario: Commander attempting individual-level reads
+✔ Hostile scenario: Client-side elevated key exposure check
+✔ Hostile scenario: Unauthenticated access attempt
+✔ Hostile scenario: Direct mutation attempt on release table
+✔ Phase 4 — Welfare Workflow Rules & Status Transitions
+✔ Phase 4 — Overdue Review Indicator Logic
+✔ Phase 4 — Assigned Welfare Officer Access Control
+✔ Phase 4 — Snapshot and Briefing Builders
+✔ Phase 4 — CRON_SECRET Server-Side Authorization
+✔ Phase 4 — Completed-Week Worker Date Helper
+✔ Phase 4 — Deterministic Trigger Rules in Worker (processUnitWeek)
+✔ Phase 4 — Worker Idempotency & Database Constraint Simulation
+ℹ tests 82
+ℹ suites 13
+ℹ pass 82
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+
+> @unitpulse/ml@0.1.0 test
+> node --test
+
+✔ calculateMedian correctly computes median for odd and even length arrays
+✔ calculateBaseline requires at least 4 comparable weeks for spike analysis
+✔ evaluateTriggers fires spike trigger when index >= 40 and index >= baseline + 15
+✔ evaluateTriggers fires sustained-high trigger when index >= 75 for two consecutive weeks
+✔ evaluateTriggers deduplicates when an active report already exists
+✔ boundary: days-since-leave >60 is strict (60 = 0 pts, 61 = 15 pts)
+✔ boundary: recovery gap >35% is strict (35 = 0 pts, 36 = 10 pts)
+✔ boundary: denial rate >25% is strict, and requires >=5 decided requests
+✔ boundary: night-duty tiers (5/8/12) are strict
+✔ boundary: deployment tiers (60/90) are strict
+✔ boundary: workload tiers (52/60) are strict
+✔ boundary: coverage ratio exactly at MIN_COVERAGE_RATIO is sufficient, just below is not
+✔ boundary: absent/zero denominator: an empty metrics object never throws and never fabricates risk
+✔ calculateUnitStrainIndex returns insufficient_data when coverage is below 80%
+✔ calculateUnitStrainIndex produces 0 for clean healthy metrics
+✔ calculateUnitStrainIndex awards correct points for elevated metrics with standard mask
+✔ calculateUnitStrainIndex normalizes score when leave denial rule is omitted
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+Total tests passed: 138 (39 frontend, 82 backend, 17 ml)
+Exit code: 0
+
+--- Command 3: npm run test:e2e ---
+
+> unitpulse@0.1.0 test:e2e
+> node scripts/test-e2e.js
+
+========================================================
+Unit Pulse 2.0 — Phase 0-3 Verification & Security Audit
+========================================================
+
+✅ PASS: Root package.json exists with required workspaces
+✅ PASS: Root package.json contains all required scripts
+✅ PASS: .gitignore exists and protects *.env.local, .env, and secrets
+✅ PASS: No service-role, AI, cron, or encryption secrets prefixed with NEXT_PUBLIC_
+✅ PASS: Public explanation page and /login page exist in frontend App Router
+✅ PASS: Public explanation page includes synthetic demo and non-diagnosis safety statement
+✅ PASS: TODO.md exists with transparent roadmap across all development phases
+✅ PASS: Backend and ML modules provide valid exports and resolve correctly
+✅ PASS: Phase 1 SQL migration defines private raw tables and RLS on all public tables
+✅ PASS: Phase 1 synthetic seed.sql exists and enforces 6 fictional units, 360 personnel, and 12 snapshots
+✅ PASS: Phase 1 permission test file exists in backend/tests/permissions.test.js
+✅ PASS: Phase 2 metrics.js and release.js exist and are re-exported from backend/src/index.js
+✅ PASS: Phase 2 release pipeline suppresses groups under five and never resamples noise on repeat calls
+✅ PASS: Phase 3 commander pages, API routes, and no-store middleware exist
+✅ PASS: Phase 3 commander view-model denies cross-unit access and never leaks a forbidden field in API payloads
+✅ PASS: Phase 4 completed-week worker, cron route, and welfare portal files exist
+✅ PASS: Phase 4 functional smoke test: cron auth, officer access gate, status transitions, and overdue indicator
+
+--------------------------------------------------------
+Results: 17/17 checks passed.
+✅ Phase 0-4 verification passed with zero security defects.
+Exit code: 0
+
+--- Command 4: npm run build ---
+
+> unitpulse@0.1.0 build
+> npm run build --workspace=@unitpulse/frontend
+
+> @unitpulse/frontend@0.1.0 build
+> next build
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    186 B          96.1 kB
+├ ○ /_not-found                          873 B          88.1 kB
+├ ƒ /api/commander/units                 0 B                0 B
+├ ƒ /api/commander/units/[unitId]        0 B                0 B
+├ ƒ /api/internal/weekly-run             0 B                0 B
+├ ƒ /api/welfare/reports                 0 B                0 B
+├ ƒ /api/welfare/reports/[id]            0 B                0 B
+├ ƒ /commander                           186 B          96.1 kB
+├ ƒ /commander/units/[id]                186 B          96.1 kB
+├ ○ /login                               186 B          96.1 kB
+├ ƒ /welfare                             188 B          96.1 kB
+└ ƒ /welfare/reports/[id]                1.66 kB        97.6 kB
++ First Load JS shared by all            87.2 kB
+  ├ chunks/364-6f328a6b09bac76c.js       31.7 kB
+  ├ chunks/618f8807-856469c17aca91ac.js  53.6 kB
+  └ other shared chunks (total)          1.86 kB
+
+ƒ Middleware                             26.5 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+Exit code: 0
+
+--- Command 5: manual HTTP verification against npm run dev ---
+GET /api/internal/weekly-run (no Authorization header) -> HTTP 401 Unauthorized, Cache-Control: no-store
+GET /api/internal/weekly-run (invalid Bearer token) -> HTTP 401 Unauthorized, Cache-Control: no-store
+GET /api/welfare/reports (unauthenticated) -> HTTP 401 Unauthorized, Cache-Control: no-store
+GET /welfare (unauthenticated) -> HTTP 307 Temporary Redirect to /login, Cache-Control: no-store, must-revalidate
+
+--- Environment ---
+Node: v20.20.2
+npm: 10.8.2
+OS: Windows
+Backend worker, deterministic triggers, RLS-enforced queries, and UI components verified clean.

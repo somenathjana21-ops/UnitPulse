@@ -22,14 +22,19 @@ export default function RootLayout({ children }) {
             <nav>
               <ul className="nav-links">
                 <li>
-                  <Link href="/" className="nav-link">
-                    Overview
+                  <Link href="/commander" className="nav-link">
+                    Commander
                   </Link>
                 </li>
                 <li>
-                  <a href="#how-it-works" className="nav-link">
+                  <Link href="/welfare" className="nav-link">
+                    Welfare Inbox
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/#how-it-works" className="nav-link">
                     How It Works
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a href="#roadmap" className="nav-link">

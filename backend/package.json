@@ -13,6 +13,7 @@
     "./permissions": "./src/permissions.js",
     "./metrics": "./src/metrics.js",
     "./release": "./src/release.js",
+    "./worker": "./src/worker.js",
     "./todo": "./src/todo.js"
   },
   "type": "module",

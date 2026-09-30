@@ -16,5 +16,11 @@ export function middleware() {
 }
 
 export const config = {
-  matcher: ['/commander/:path*', '/api/commander/:path*'],
+  matcher: [
+    '/commander/:path*',
+    '/api/commander/:path*',
+    '/welfare/:path*',
+    '/api/welfare/:path*',
+    '/api/internal/:path*',
+  ],
 };

@@ -285,12 +285,73 @@ await check('Phase 3 commander view-model denies cross-unit access and never lea
   return true;
 });
 
+// 15. Phase 4 — Verify completed-week worker, cron route, welfare inbox and report detail exist
+await check('Phase 4 completed-week worker, cron route, and welfare portal files exist', () => {
+  const paths = [
+    path.join(rootDir, 'backend', 'src', 'worker.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'api', 'internal', 'weekly-run', 'route.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'api', 'welfare', 'reports', 'route.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'api', 'welfare', 'reports', '[id]', 'route.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'welfare', 'page.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'welfare', 'reports', '[id]', 'page.js'),
+    path.join(rootDir, 'frontend', 'src', 'middleware.js'),
+  ];
+  if (!paths.every((p) => fs.existsSync(p))) return false;
+  const middleware = fs.readFileSync(paths[6], 'utf8');
+  return middleware.includes('/welfare') && middleware.includes('/api/welfare') && middleware.includes('no-store');
+});
+
+// 16. Phase 4 — Functional smoke test: cron secret check, officer scoping, status transitions, and overdue review indicator
+await check('Phase 4 functional smoke test: cron auth, officer access gate, status transitions, and overdue indicator', async () => {
+  const { verifyCronAuthorization } = await import('../backend/src/worker.js');
+  const { validateStatusTransition, isReportOverdue } = await import('../backend/src/welfare.js');
+  const { resolveWelfareReportAccess } = await import('../frontend/src/lib/welfare/authorize.js');
+
+  // 1. Cron secret verification
+  const testSecret = 'secret_test_token_phase4';
+  if (!verifyCronAuthorization(`Bearer ${testSecret}`, testSecret)) return false;
+  if (verifyCronAuthorization('Bearer invalid', testSecret)) return false;
+
+  // 2. Welfare officer scoping
+  const officerOne = { id: 'welfare-1', role: 'welfare_officer' };
+  const officerTwo = { id: 'welfare-2', role: 'welfare_officer' };
+  const commander = { id: 'cmd-1', role: 'commander' };
+  const reportOne = { id: 'rep-1', unit_id: 'UNIT-B', assigned_to: 'welfare-1' };
+
+  const accessAssigned = resolveWelfareReportAccess({ user: officerOne, report: reportOne });
+  const accessUnassigned = resolveWelfareReportAccess({ user: officerTwo, report: reportOne });
+  const accessCommander = resolveWelfareReportAccess({ user: commander, report: reportOne });
+
+  if (!accessAssigned.allowed || accessAssigned.httpStatus !== 200) return false;
+  if (accessUnassigned.allowed || accessUnassigned.httpStatus !== 404) return false; // no existence oracle
+  if (accessCommander.allowed || accessCommander.httpStatus !== 403) return false;
+
+  // 3. Status transitions
+  const validTransition = validateStatusTransition('new', 'acknowledged');
+  const invalidJump = validateStatusTransition('new', 'closed', { notes: 'Premature close' });
+  const closingWithoutNotes = validateStatusTransition('action_taken', 'closed', { notes: 'Short' });
+  const validClose = validateStatusTransition('action_taken', 'closed', { notes: 'Comprehensive welfare review completed.' });
+
+  if (!validTransition.valid || invalidJump.valid || closingWithoutNotes.valid || !validClose.valid) return false;
+
+  // 4. Overdue indicator
+  const overdueReport = {
+    status: 'follow_up',
+    follow_up_on: '2026-09-01',
+    created_at: '2026-08-01T00:00:00Z',
+  };
+  const overdueRes = isReportOverdue(overdueReport, new Date('2026-09-30T12:00:00Z'));
+  if (!overdueRes.overdue || overdueRes.reason !== 'follow_up_overdue') return false;
+
+  return true;
+});
+
 console.log('\n--------------------------------------------------------');
 console.log(`Results: ${passedChecks}/${totalChecks} checks passed.`);
 if (failures.length > 0) {
   console.log(`Failures:\n  - ${failures.join('\n  - ')}`);
   process.exit(1);
 } else {
-  console.log('✅ Phase 0-3 verification passed with zero security defects.');
+  console.log('✅ Phase 0-4 verification passed with zero security defects.');
   process.exit(0);
 }
