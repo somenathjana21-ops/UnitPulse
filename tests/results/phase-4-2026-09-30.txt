@@ -207,7 +207,39 @@ Exit code: 0
 GET /api/internal/weekly-run (no Authorization header) -> HTTP 401 Unauthorized, Cache-Control: no-store
 GET /api/internal/weekly-run (invalid Bearer token) -> HTTP 401 Unauthorized, Cache-Control: no-store
 GET /api/welfare/reports (unauthenticated) -> HTTP 401 Unauthorized, Cache-Control: no-store
+GET /api/welfare/reports/rep-123 (unauthenticated) -> HTTP 401 Unauthorized, Cache-Control: no-store
+PATCH /api/welfare/reports/rep-123 (unauthenticated) -> HTTP 401 Unauthorized, Cache-Control: no-store
 GET /welfare (unauthenticated) -> HTTP 307 Temporary Redirect to /login, Cache-Control: no-store, must-revalidate
+
+--- Command 6: node scripts/verify-phase-4-cases.js (Guidebook Verification Protocol) ---
+- Sequential Run 1: Releases created=1, Reports created=1 (DB Releases=1, DB Reports=1)
+- Sequential Run 2: Releases reused=1, Releases created=0, Reports created=0, Reports deduplicated=1 (DB Releases=1, DB Reports=1)
+- Concurrent Workers (Parallel Race): Worker A created=1 deduplicated=0; Worker B created=0 deduplicated=1 (DB Releases=1, DB Reports=1)
+- Prior-Only Baseline: 4 comparable prior weeks [20, 24, 26, 30] -> median baseline = 25 (strictly excludes current week)
+- Sustained-High Case: current=78, prior=76, baseline=72 -> trigger=true (rule: sustained_high)
+- Missing Baseline Case: current=55, baseline=30, comparable weeks=2 (< 4) -> trigger=false (spike rule inhibited)
+- Officer Assignment: report assigned_to='officer-assigned-1' (unit's assigned welfare officer)
+- Access Attempts on Report:
+  * Anonymous User GET: 401 Unauthorized
+  * Anonymous User PATCH: 401 Unauthorized
+  * Commander User GET: 403 Forbidden
+  * Commander User PATCH: 403 Forbidden
+  * Unrelated Welfare Officer GET: 404 Not Found (deliberately concealed)
+  * Unrelated Welfare Officer PATCH: 404 Not Found (deliberately concealed)
+  * Assigned Officer GET: 200 OK
+  * Assigned Officer PATCH to 'acknowledged': 200 OK
+  * Assigned Officer PATCH to 'closed' directly: 409 Conflict (invalid transition)
+  * Assigned Officer PATCH to 'action_taken': 200 OK
+  * Assigned Officer PATCH to 'closed' without notes: 409 Conflict (notes required)
+  * Assigned Officer PATCH to 'closed' with outcome notes: 200 OK
+- Final Database Row Counts:
+  * Units: 3
+  * User Roles: 3
+  * Unit Assignments: 4
+  * Unit Week Metrics: 10
+  * Unit Week Releases: 2
+  * Welfare Reports: 2
+Exit code: 0
 
 --- Environment ---
 Node: v20.20.2
