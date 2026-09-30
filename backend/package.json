@@ -1,0 +1,23 @@
+{
+  "name": "@unitpulse/backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Server-only domain logic, security checks, audit logging, and privacy release rules for Unit Pulse 2.0",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./config": "./src/config.js",
+    "./privacy": "./src/privacy.js",
+    "./audit": "./src/audit.js",
+    "./welfare": "./src/welfare.js",
+    "./todo": "./src/todo.js"
+  },
+  "type": "module",
+  "dependencies": {
+    "@unitpulse/ml": "*"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "node scripts/lint.js"
+  }
+}

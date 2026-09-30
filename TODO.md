@@ -1,0 +1,125 @@
+# Unit Pulse 2.0 — Implementation Roadmap & Unfinished Features TODO
+
+> **Status:** Phase 0 (Scaffold & Environment) Complete.  
+> **Environment:** Synthetic Demo Prototype only.  
+> **Safety Notice:** The Unit Load & Recovery Index is an operational welfare planning indicator, NOT a medical or psychological diagnosis.
+
+---
+
+## Phase Status Summary
+
+| Phase | Title | Target Scope | Status |
+|---|---|---|---|
+| **Phase 0** | Scaffold & Environment | Root, `frontend/`, `backend/`, `ml/`, `scripts/`, `.gitignore` | ✅ **COMPLETED** |
+| **Phase 1** | Schema, Roles & Synthetic Seed | `supabase/migrations/`, `scripts/seed-demo.js`, role RLS | ⏳ **PENDING (Phase 1)** |
+| **Phase 2** | Metrics, Index, Baseline & Privacy Release | `backend/src/release.js`, `ml/src/`, Laplace noise, fixtures | ⏳ **PENDING (Phase 2)** |
+| **Phase 3** | Commander Dashboard & Walkthrough | `frontend/src/app/commander/`, trends, cards, accessible charts | ⏳ **PENDING (Phase 3)** |
+| **Phase 4** | Weekly Report & Welfare Workflow | `frontend/src/app/welfare/`, Vercel cron worker, overdue alerts | ⏳ **PENDING (Phase 4)** |
+| **Phase 5** | AI Adapter & Briefing | OpenAI adapter, fallback templates, print-to-PDF export | ⏳ **PENDING (Phase 5)** |
+
+---
+
+## Detailed Task Breakdown
+
+### ✅ Phase 0 — Scaffold & Environment (Completed)
+- [x] Configure npm workspaces for `frontend/` (Next.js App Router, JS), `backend/` (server-only domain), and `ml/` (deterministic analytics).
+- [x] Create root `package.json` scripts: `dev`, `lint`, `test`, `test:e2e`, `build`, and `seed:demo`.
+- [x] Create `.gitignore` protecting `*.env.local`, `.env`, secrets, keys, and build artifacts.
+- [x] Implement public explanation page (`/`) with synthetic-demo wording and "not a diagnosis" safety statement.
+- [x] Implement `/login` page with role scope architecture and Supabase Auth placeholder (no fake auth, no client service keys).
+- [x] Implement cross-workspace import verification between `frontend/`, `backend/`, and `ml/`.
+- [x] Implement security audit script `scripts/test-e2e.js` checking for forbidden `NEXT_PUBLIC_` secret leaks.
+
+---
+
+### ⏳ Phase 1 — Schema, Roles & Synthetic Seed (Upcoming)
+- [ ] **Database Migrations (`supabase/migrations/`)**:
+  - [ ] Create private schema for raw synthetic tables: `personnel`, `leave_records`, `duty_records`, `deployments`, `leave_eligibility`.
+  - [ ] Ensure private schema is **not exposed** to browser clients via PostgREST.
+  - [ ] Create public release/report tables: `unit_week_releases`, `welfare_reports`, `user_roles`, `unit_assignments`, `access_grants`, `welfare_audit_log`.
+  - [ ] Enable Row-Level Security (RLS) on all public tables with strict role/unit assignment policies.
+  - [ ] Do **not** attempt to place RLS directly on a materialized view.
+  - [ ] Create narrow database functions for scoped break-glass grant generation and transactional individual reads with logging.
+- [ ] **Synthetic Seed Generator (`scripts/seed-demo.js`)**:
+  - [ ] Generate 6 fictional units (e.g., `UNIT-A` through `UNIT-F`) with ~60 synthetic personnel each.
+  - [ ] Generate ~180 days of historical records with at least 12 completed weekly snapshots.
+  - [ ] Create 1 elevated unit (leave backlog & heavy night shifts) and 1 stable recovery unit.
+  - [ ] Zero real personnel names, real force identifiers, or operational locations.
+- [ ] **Permission Integration Tests**:
+  - [ ] Verify anonymous and commander users cannot query raw personnel rows.
+  - [ ] Verify changing unit ID in queries does not reveal unauthorized unit data.
+  - [ ] Verify users cannot self-assign or escalate roles.
+
+---
+
+### ⏳ Phase 2 — Metrics, Index, Baseline & Privacy Release
+- [ ] **Backend Source Aggregation (`backend/src/metrics.js`)**:
+  - [ ] 90-day leave utilization and coverage calculations.
+  - [ ] Recovery gap calculation (>60 days without qualifying leave).
+  - [ ] Leave denial rate calculation (with omission when decided requests < 5).
+  - [ ] 28-day mean night-duty shifts and 7-day mean workload hours.
+  - [ ] Continuous deployment duration calculation.
+  - [ ] 80% source coverage threshold enforcement (missing data = "insufficient data", not 0).
+- [ ] **Privacy Release Pipeline (`backend/src/release.js`)**:
+  - [ ] Enforce k-anonymity suppression: withhold entire view if active personnel < 5.
+  - [ ] Enforce small-cell suppression: withhold cell or complement if < 5.
+  - [ ] Sample Laplace noise (epsilon = 0.2, sensitivity = 1.0) on bounded counts **once** per release.
+  - [ ] Store noisy approximations in `unit_week_releases`; never resample on page reads.
+- [ ] **Test Fixtures (`tests/fixtures/`)**:
+  - [ ] Unit with group size 4 (fully suppressed).
+  - [ ] Unit with group size 5 and 1-person breakout (breakout suppressed).
+  - [ ] Incomplete duty coverage (no index generated).
+  - [ ] Repeated GET requests returning identical stored noisy values.
+
+---
+
+### ⏳ Phase 3 — Commander Dashboard & Walkthrough
+- [ ] **Pages & Layouts (`frontend/src/app/commander/`)**:
+  - [ ] `/commander`: Unit-card grid displaying status bands (`Normal`, `Review`, `Elevated`).
+  - [ ] `/commander/units/[id]`: Weekly trend chart against rolling baseline, leave/night-duty indicators.
+  - [ ] High-contrast accessible charts with text alternatives for colors.
+  - [ ] Clear suppression UI state ("Insufficient group size to show this view").
+  - [ ] "How this works" explanation drawer explaining the 3 Core Principles.
+  - [ ] First-time walkthrough: "See Unit Health &rarr; Understand Possible Contributors &rarr; Consider Supportive Actions".
+- [ ] **Security Enforcement**:
+  - [ ] Route handlers enforce `Cache-Control: no-store`.
+  - [ ] Verify responses contain zero personnel IDs, individual rows, or hidden metrics.
+  - [ ] Cross-unit URL tampering denied with 403/404.
+
+---
+
+### ⏳ Phase 4 — Weekly Report & Welfare Workflow
+- [ ] **Welfare Officer Portal (`frontend/src/app/welfare/`)**:
+  - [ ] `/welfare`: Assigned reports inbox with status badges (`new`, `acknowledged`, `action_taken`, `follow_up`, `closed`).
+  - [ ] `/welfare/reports/[id]`: Aggregate snapshot, trigger reasons, and follow-up form.
+  - [ ] `/welfare/audit`: Officer's personal access audit trail.
+  - [ ] Overdue review indicator for reports pending past SLA.
+- [ ] **Break-Glass Individual Access Flow**:
+  - [ ] Modal requiring documented justification and reason code.
+  - [ ] Server-enforced 30-minute expiry; reason encrypted with AES-256-GCM.
+  - [ ] Paginated reads (max 20 records) with transactional audit logging.
+- [ ] **Weekly Job & Vercel Cron (`backend/src/worker.js`)**:
+  - [ ] Protected GET route `/api/internal/weekly-run` verified with `Authorization: Bearer <CRON_SECRET>`.
+  - [ ] Deduplication: at most 1 active report per unit on concurrent/retried cron runs.
+
+---
+
+### ⏳ Phase 5 — AI Adapter & Briefing
+- [ ] **Server-Only LLM Adapter (`backend/src/ai-adapter.js`)**:
+  - [ ] Switchable OpenAI-compatible client configured via `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`.
+  - [ ] Pass only privacy-approved aggregate metrics and allow-listed evidence codes.
+  - [ ] Validate structured output; assemble numerical statements server-side.
+  - [ ] Deterministic fallback templates in `NO_LLM_MODE=true` or when provider is unavailable.
+- [ ] **Print-to-PDF Aggregate Briefing**:
+  - [ ] Print-friendly aggregate HTML view at `/api/briefings/:unitId/print`.
+  - [ ] Support native browser Print &rarr; Save as PDF (no claim of external PDF server).
+
+---
+
+## Release Gate Checklist (Must pass before production deployment)
+- [ ] No personnel-level rows returned to commander endpoints.
+- [ ] Small groups (<5) and small cells completely suppressed in API and UI.
+- [ ] Zero unlogged individual reads across the entire application.
+- [ ] Cron retries do not duplicate active welfare reports.
+- [ ] AI model receives no direct personnel identifiers or unreleased metrics.
+- [ ] Zero hardcoded service keys or client-prefixed secrets (`NEXT_PUBLIC_`) in codebase.

@@ -16,6 +16,8 @@ Record changes here when implementation differs from the approved design.
 | D-10 | Public demo uses synthetic data only | Real force data requires separate approvals and infrastructure | Accepted |
 | D-11 | Print-to-PDF is the MVP export | Avoid claiming an unimplemented PDF generation service | Accepted; revisit if needed |
 | D-12 | No clinical ML training in MVP | No validated, ethically collected training labels | Accepted; future research only |
+| D-13 | Use npm workspaces for frontend, backend, and ml isolation | Strict trust boundary separation between server-only domain, pure ML, and UI | Accepted |
+| D-14 | Forbid NEXT_PUBLIC_ on service, AI, cron, and encryption secrets | Prevent any accidental credential leakage into client bundles with static and runtime guards | Accepted |
 
 ## Change procedure
 

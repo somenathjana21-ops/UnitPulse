@@ -1,0 +1,250 @@
+﻿=== Phase Verification Test Run: 2026-09-30 ===
+
+--- Command 1: npm run lint ---
+
+> unitpulse@0.1.0 lint
+> npm run lint --workspaces --if-present
+
+
+> @unitpulse/frontend@0.1.0 lint
+> next lint
+
+Γ£ö No ESLint warnings or errors
+
+> @unitpulse/backend@0.1.0 lint
+> node scripts/lint.js
+
+[LINT] Checking @unitpulse/backend source files...
+[LINT OK] Verified 6 files in @unitpulse/backend.
+
+> @unitpulse/ml@0.1.0 lint
+> node scripts/lint.js
+
+[LINT] Checking @unitpulse/ml source files...
+[LINT OK] Verified 6 files in @unitpulse/ml.
+Exit code: 0
+
+--- Command 2: npm run test ---
+
+> unitpulse@0.1.0 test
+> npm run test --workspaces --if-present
+
+
+> @unitpulse/frontend@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: frontend successfully resolves and invokes @unitpulse/backend exports
+ok 1 - frontend successfully resolves and invokes @unitpulse/backend exports
+  ---
+  duration_ms: 0.9457
+  ...
+# Subtest: frontend successfully resolves and invokes @unitpulse/ml exports
+ok 2 - frontend successfully resolves and invokes @unitpulse/ml exports
+  ---
+  duration_ms: 0.4207
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 80.8558
+
+> @unitpulse/backend@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: validateEnvironmentSecurity rejects forbidden client prefixes on server secrets
+ok 1 - validateEnvironmentSecurity rejects forbidden client prefixes on server secrets
+  ---
+  duration_ms: 1.5916
+  ...
+# Subtest: validateGrantRequest verifies assigned officer and required reason length
+ok 2 - validateGrantRequest verifies assigned officer and required reason length
+  ---
+  duration_ms: 0.9522
+  ...
+# Subtest: validateStatusTransition enforces valid welfare lifecycle state transitions
+ok 3 - validateStatusTransition enforces valid welfare lifecycle state transitions
+  ---
+  duration_ms: 0.2864
+  ...
+# Subtest: checkGroupSuppression suppresses groups smaller than MIN_GROUP_SIZE (5)
+ok 4 - checkGroupSuppression suppresses groups smaller than MIN_GROUP_SIZE (5)
+  ---
+  duration_ms: 1.2891
+  ...
+# Subtest: checkCellSuppression suppresses small cells (<5) and revealing complements
+ok 5 - checkCellSuppression suppresses small cells (<5) and revealing complements
+  ---
+  duration_ms: 0.1604
+  ...
+# Subtest: validatePublicReleasePayload throws error if personal or unreleased fields are present
+ok 6 - validatePublicReleasePayload throws error if personal or unreleased fields are present
+  ---
+  duration_ms: 0.4091
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 73.5558
+
+> @unitpulse/ml@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: calculateMedian correctly computes median for odd and even length arrays
+ok 1 - calculateMedian correctly computes median for odd and even length arrays
+  ---
+  duration_ms: 1.1012
+  ...
+# Subtest: calculateBaseline requires at least 4 comparable weeks for spike analysis
+ok 2 - calculateBaseline requires at least 4 comparable weeks for spike analysis
+  ---
+  duration_ms: 0.2294
+  ...
+# Subtest: evaluateTriggers fires spike trigger when index >= 40 and index >= baseline + 15
+ok 3 - evaluateTriggers fires spike trigger when index >= 40 and index >= baseline + 15
+  ---
+  duration_ms: 0.2086
+  ...
+# Subtest: evaluateTriggers fires sustained-high trigger when index >= 75 for two consecutive weeks
+ok 4 - evaluateTriggers fires sustained-high trigger when index >= 75 for two consecutive weeks
+  ---
+  duration_ms: 0.1015
+  ...
+# Subtest: evaluateTriggers deduplicates when an active report already exists
+ok 5 - evaluateTriggers deduplicates when an active report already exists
+  ---
+  duration_ms: 0.1168
+  ...
+# Subtest: calculateUnitStrainIndex returns insufficient_data when coverage is below 80%
+ok 6 - calculateUnitStrainIndex returns insufficient_data when coverage is below 80%
+  ---
+  duration_ms: 1.0444
+  ...
+# Subtest: calculateUnitStrainIndex produces 0 for clean healthy metrics
+ok 7 - calculateUnitStrainIndex produces 0 for clean healthy metrics
+  ---
+  duration_ms: 0.1482
+  ...
+# Subtest: calculateUnitStrainIndex awards correct points for elevated metrics with standard mask
+ok 8 - calculateUnitStrainIndex awards correct points for elevated metrics with standard mask
+  ---
+  duration_ms: 0.1081
+  ...
+# Subtest: calculateUnitStrainIndex normalizes score when leave denial rule is omitted
+ok 9 - calculateUnitStrainIndex normalizes score when leave denial rule is omitted
+  ---
+  duration_ms: 0.6866
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 71.9532
+Exit code: 0
+
+--- Command 3: npm run test:e2e ---
+
+> unitpulse@0.1.0 test:e2e
+> node scripts/test-e2e.js
+
+========================================================
+Unit Pulse 2.0 ΓÇö Phase 0 Verification & Security Audit
+========================================================
+
+Γ£à PASS: Root package.json exists with required workspaces
+Γ£à PASS: Root package.json contains all required scripts
+Γ£à PASS: .gitignore exists and protects *.env.local, .env, and secrets
+Γ£à PASS: No service-role, AI, cron, or encryption secrets prefixed with NEXT_PUBLIC_
+Γ£à PASS: Public explanation page and /login page exist in frontend App Router
+Γ£à PASS: Public explanation page includes synthetic demo and non-diagnosis safety statement
+Γ£à PASS: TODO.md exists with transparent roadmap across all development phases
+Γ£à PASS: Backend and ML modules provide valid exports and resolve correctly
+
+--------------------------------------------------------
+Results: 8/8 checks passed.
+Γ£à Phase 0 verification passed with zero security defects.
+Exit code: 0
+
+--- Command 4: npm run build ---
+
+> unitpulse@0.1.0 build
+> npm run build --workspace=@unitpulse/frontend
+
+
+> @unitpulse/frontend@0.1.0 build
+> next build
+
+  Γû▓ Next.js 14.2.35
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/5) ...
+   Generating static pages (1/5) 
+   Generating static pages (2/5) 
+   Generating static pages (3/5) 
+ Γ£ô Generating static pages (5/5)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+Γöî Γùï /                                    179 B          96.1 kB
+Γö£ Γùï /_not-found                          873 B          88.1 kB
+Γöö Γùï /login                               179 B          96.1 kB
++ First Load JS shared by all            87.2 kB
+  Γö£ chunks/364-18bce32d141212a9.js       31.7 kB
+  Γö£ chunks/618f8807-294cea9d40b23b0c.js  53.6 kB
+  Γöö other shared chunks (total)          1.86 kB
+
+
+Γùï  (Static)  prerendered as static content
+
+Exit code: 0
+
+--- Command 5: npm run seed:demo ---
+
+> unitpulse@0.1.0 seed:demo
+> node scripts/seed-demo.js
+
+====================================================
+Unit Pulse 2.0 ΓÇö Synthetic Demo Seed (Phase 0 Check)
+====================================================
+
+[INFO] Synthetic Demo Dataset Specifications:
+  - Target Units: 6 fictional units (e.g., UNIT-A through UNIT-F)
+  - Personnel: ~60 synthetic personnel per unit (360 total)
+  - Record Window: ~180 days with >=12 completed weekly snapshots
+  - Privacy Rule: Fictional identifiers only; no real force data
+  - Elevated Unit: 1 unit with elevated leave/night-duty conditions
+  - Stable Unit: 1 unit with stable recovery patterns
+
+[STATUS] Database schema & seed generator are scheduled for Phase 1.
+         To proceed to Phase 1:
+         1. Start Supabase locally: npx supabase start
+         2. Apply SQL migrations:   npx supabase db reset
+         3. Run synthetic seed:     npm run seed:demo
+
+[PASS] Phase 0 seed:demo placeholder executed cleanly.
+Exit code: 0
+
+--- Command 6: npx supabase status ---
+{"linked_project":null,"_tag":"Error","error":{"code":"LegacyStatusDbInspectError","message":"failed to inspect container health: docker: command not found (podman also not found) ΓÇö install Docker Desktop or Podman and ensure it is on PATH"}}
+Exit code: 1
+

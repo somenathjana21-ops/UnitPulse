@@ -1,0 +1,47 @@
+# Environment and local configurations
+*.env.local
+.env.local
+.env*.local
+.env
+*.env
+!.env.example
+
+# Credentials, keys, and secrets
+*.pem
+*.key
+*.cert
+*.pfx
+secrets/
+*.secret
+
+# Node dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# Debug and runtime logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing and coverage
+coverage/
+.nyc_output/
+
+# Supabase local environment
+.supabase/
+supabase/.temp/

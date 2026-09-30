@@ -1,0 +1,20 @@
+{
+  "name": "@unitpulse/ml",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Deterministic analytics engine, scoring, baselines, and triggers for Unit Pulse 2.0",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./scoring": "./src/scoring.js",
+    "./baseline": "./src/baseline.js",
+    "./triggers": "./src/triggers.js",
+    "./noise": "./src/noise.js",
+    "./todo": "./src/todo.js"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "lint": "node scripts/lint.js"
+  }
+}

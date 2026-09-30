@@ -1,0 +1,30 @@
+{
+  "name": "unitpulse",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Unit Pulse 2.0 — Privacy-First Aggregate Welfare Intelligence (Synthetic Demo Monorepo)",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "ml"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@unitpulse/frontend",
+    "build": "npm run build --workspace=@unitpulse/frontend",
+    "start": "npm run start --workspace=@unitpulse/frontend",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "node scripts/test-e2e.js",
+    "seed:demo": "node scripts/seed-demo.js"
+  },
+  "keywords": [
+    "welfare-intelligence",
+    "synthetic-demo",
+    "aggregate-first",
+    "privacy-preserving",
+    "nextjs",
+    "sih26186"
+  ],
+  "author": "Unit Pulse 2.0 Team",
+  "license": "MIT"
+}
