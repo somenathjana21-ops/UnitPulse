@@ -12,7 +12,7 @@
 |---|---|---|---|
 | **Phase 0** | Scaffold & Environment | Root, `frontend/`, `backend/`, `ml/`, `scripts/`, `.gitignore` | ✅ **COMPLETED** |
 | **Phase 1** | Schema, Roles & Synthetic Seed | `supabase/migrations/`, `scripts/seed-demo.js`, role RLS | ✅ **COMPLETED** |
-| **Phase 2** | Metrics, Index, Baseline & Privacy Release | `backend/src/release.js`, `ml/src/`, Laplace noise, fixtures | ⏳ **PENDING (Phase 2)** |
+| **Phase 2** | Metrics, Index, Baseline & Privacy Release | `backend/src/release.js`, `ml/src/`, Laplace noise, fixtures | ✅ **COMPLETED** |
 | **Phase 3** | Commander Dashboard & Walkthrough | `frontend/src/app/commander/`, trends, cards, accessible charts | ⏳ **PENDING (Phase 3)** |
 | **Phase 4** | Weekly Report & Welfare Workflow | `frontend/src/app/welfare/`, Vercel cron worker, overdue alerts | ⏳ **PENDING (Phase 4)** |
 | **Phase 5** | AI Adapter & Briefing | OpenAI adapter, fallback templates, print-to-PDF export | ⏳ **PENDING (Phase 5)** |
@@ -56,24 +56,27 @@
 
 ---
 
-### ⏳ Phase 2 — Metrics, Index, Baseline & Privacy Release
-- [ ] **Backend Source Aggregation (`backend/src/metrics.js`)**:
-  - [ ] 90-day leave utilization and coverage calculations.
-  - [ ] Recovery gap calculation (>60 days without qualifying leave).
-  - [ ] Leave denial rate calculation (with omission when decided requests < 5).
-  - [ ] 28-day mean night-duty shifts and 7-day mean workload hours.
-  - [ ] Continuous deployment duration calculation.
-  - [ ] 80% source coverage threshold enforcement (missing data = "insufficient data", not 0).
-- [ ] **Privacy Release Pipeline (`backend/src/release.js`)**:
-  - [ ] Enforce k-anonymity suppression: withhold entire view if active personnel < 5.
-  - [ ] Enforce small-cell suppression: withhold cell or complement if < 5.
-  - [ ] Sample Laplace noise (epsilon = 0.2, sensitivity = 1.0) on bounded counts **once** per release.
-  - [ ] Store noisy approximations in `unit_week_releases`; never resample on page reads.
-- [ ] **Test Fixtures (`tests/fixtures/`)**:
-  - [ ] Unit with group size 4 (fully suppressed).
-  - [ ] Unit with group size 5 and 1-person breakout (breakout suppressed).
-  - [ ] Incomplete duty coverage (no index generated).
-  - [ ] Repeated GET requests returning identical stored noisy values.
+### ✅ Phase 2 — Metrics, Index, Baseline & Privacy Release (Completed)
+- [x] **Backend Source Aggregation (`backend/src/metrics.js`)**:
+  - [x] 90-day leave utilization and coverage calculations.
+  - [x] Recovery gap calculation (>60 days without qualifying leave).
+  - [x] Leave denial rate calculation (with omission when decided requests < 5, enforced downstream in `ml/src/scoring.js`).
+  - [x] 28-day mean night-duty shifts and 7-day mean workload hours.
+  - [x] Continuous deployment duration calculation (verified non-deployed = confirmed 0, never assumed).
+  - [x] 80% source coverage threshold enforcement per domain (missing data = "insufficient data", not 0).
+- [x] **Privacy Release Pipeline (`backend/src/release.js`)**:
+  - [x] Enforce k-anonymity suppression: withhold entire view if active personnel < 5.
+  - [x] Enforce small-cell suppression: withhold cell or complement if < 5 (deployed-count and recovery-gap-count fields).
+  - [x] Sample Laplace noise (epsilon = 0.2, sensitivity = 1.0) on bounded counts **once** per release.
+  - [x] Idempotent: passing `existingRelease` back in returns the stored release unchanged; never resamples.
+- [x] **Test Fixtures (`backend/tests/metrics.test.js`, `backend/tests/release.test.js`)**:
+  - [x] Unit with group size 4 (fully suppressed).
+  - [x] Unit with group size 5 and 1-person breakout (breakout suppressed, unit-level release still published).
+  - [x] Incomplete duty coverage (no index generated, `insufficient_data` band).
+  - [x] Repeated release calls returning identical stored noisy values.
+  - [x] Baseline boundary (3 vs. 4 comparable prior weeks).
+  - [x] Triggered unit (sustained-high) with cron-retry deduplication.
+  - [x] `scripts/test-e2e.js` extended with Phase 2 module-export and functional smoke checks (13/13 passing).
 
 ---
 

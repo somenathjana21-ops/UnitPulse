@@ -11,6 +11,8 @@
     "./audit": "./src/audit.js",
     "./welfare": "./src/welfare.js",
     "./permissions": "./src/permissions.js",
+    "./metrics": "./src/metrics.js",
+    "./release": "./src/release.js",
     "./todo": "./src/todo.js"
   },
   "type": "module",

@@ -10,4 +10,6 @@ export * from './privacy.js';
 export * from './audit.js';
 export * from './welfare.js';
 export * from './permissions.js';
+export * from './metrics.js';
+export * from './release.js';
 export * from './todo.js';

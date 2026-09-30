@@ -1,7 +1,7 @@
 /**
  * scripts/test-e2e.js
  *
- * Phase 0 End-to-End Verification and Security Audit Script
+ * Phase 0-2 End-to-End Verification and Security Audit Script
  *
  * Validates:
  * 1. Root package.json scripts (dev, lint, test, test:e2e, build, seed:demo)
@@ -11,6 +11,8 @@
  * 5. Prohibition of fake auth bypass or client-exposed service keys
  * 6. Synthetic-demo and non-diagnosis wording compliance in public pages
  * 7. Cross-workspace package import resolution
+ * 8-10. Phase 1 schema/RLS/seed structural checks
+ * 11-12. Phase 2 metrics/release module exports and a functional suppression/idempotency smoke test
  */
 
 import fs from 'node:fs';
@@ -25,10 +27,10 @@ let totalChecks = 0;
 let passedChecks = 0;
 let failures = [];
 
-function check(description, fn) {
+async function check(description, fn) {
   totalChecks++;
   try {
-    const result = fn();
+    const result = await fn();
     if (result === false) {
       failures.push(description);
       console.log(`❌ FAIL: ${description}`);
@@ -43,11 +45,11 @@ function check(description, fn) {
 }
 
 console.log('========================================================');
-console.log('Unit Pulse 2.0 — Phase 0 Verification & Security Audit');
+console.log('Unit Pulse 2.0 — Phase 0-2 Verification & Security Audit');
 console.log('========================================================\n');
 
 // 1. Check root package.json
-check('Root package.json exists with required workspaces', () => {
+await check('Root package.json exists with required workspaces', () => {
   const pkgPath = path.join(rootDir, 'package.json');
   if (!fs.existsSync(pkgPath)) return false;
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
@@ -55,14 +57,14 @@ check('Root package.json exists with required workspaces', () => {
   return ['frontend', 'backend', 'ml'].every((ws) => workspaces.includes(ws));
 });
 
-check('Root package.json contains all required scripts', () => {
+await check('Root package.json contains all required scripts', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
   const requiredScripts = ['dev', 'lint', 'test', 'test:e2e', 'build', 'seed:demo'];
   return requiredScripts.every((s) => typeof pkg.scripts?.[s] === 'string');
 });
 
 // 2. Check .gitignore
-check('.gitignore exists and protects *.env.local, .env, and secrets', () => {
+await check('.gitignore exists and protects *.env.local, .env, and secrets', () => {
   const gitignorePath = path.join(rootDir, '.gitignore');
   if (!fs.existsSync(gitignorePath)) return false;
   const content = fs.readFileSync(gitignorePath, 'utf8');
@@ -73,7 +75,7 @@ check('.gitignore exists and protects *.env.local, .env, and secrets', () => {
 });
 
 // 3. Scan codebase for prohibited NEXT_PUBLIC_ secret leaks
-check('No service-role, AI, cron, or encryption secrets prefixed with NEXT_PUBLIC_', () => {
+await check('No service-role, AI, cron, or encryption secrets prefixed with NEXT_PUBLIC_', () => {
   const sensitiveFragments = [
     'SERVICE_ROLE',
     'CRON_SECRET',
@@ -113,14 +115,14 @@ check('No service-role, AI, cron, or encryption secrets prefixed with NEXT_PUBLI
 });
 
 // 4. Verify public explanation and login pages exist
-check('Public explanation page and /login page exist in frontend App Router', () => {
+await check('Public explanation page and /login page exist in frontend App Router', () => {
   const homePath = path.join(rootDir, 'frontend', 'src', 'app', 'page.js');
   const loginPath = path.join(rootDir, 'frontend', 'src', 'app', 'login', 'page.js');
   return fs.existsSync(homePath) && fs.existsSync(loginPath);
 });
 
 // 5. Verify synthetic-demo and non-diagnosis wording in public explanation page
-check('Public explanation page includes synthetic demo and non-diagnosis safety statement', () => {
+await check('Public explanation page includes synthetic demo and non-diagnosis safety statement', () => {
   const homePath = path.join(rootDir, 'frontend', 'src', 'app', 'page.js');
   if (!fs.existsSync(homePath)) return false;
   const content = fs.readFileSync(homePath, 'utf8').toLowerCase();
@@ -130,7 +132,7 @@ check('Public explanation page includes synthetic demo and non-diagnosis safety 
 });
 
 // 6. Verify TODO list file exists and contains unfinished feature roadmap
-check('TODO.md exists with transparent roadmap across all development phases', () => {
+await check('TODO.md exists with transparent roadmap across all development phases', () => {
   const todoPath = path.join(rootDir, 'TODO.md');
   if (!fs.existsSync(todoPath)) return false;
   const content = fs.readFileSync(todoPath, 'utf8');
@@ -138,14 +140,14 @@ check('TODO.md exists with transparent roadmap across all development phases', (
 });
 
 // 7. Verify backend and ml modules provide valid exports and resolve correctly
-check('Backend and ML modules provide valid exports and resolve correctly', async () => {
+await check('Backend and ML modules provide valid exports and resolve correctly', async () => {
   const backendPkg = path.join(rootDir, 'backend', 'package.json');
   const mlPkg = path.join(rootDir, 'ml', 'package.json');
   return fs.existsSync(backendPkg) && fs.existsSync(mlPkg);
 });
 
 // 8. Phase 1 — Verify SQL migration file exists and defines private/public schema boundary
-check('Phase 1 SQL migration defines private raw tables and RLS on all public tables', () => {
+await check('Phase 1 SQL migration defines private raw tables and RLS on all public tables', () => {
   const migPath = path.join(rootDir, 'supabase', 'migrations', '20260930120000_phase1_initial_schema.sql');
   if (!fs.existsSync(migPath)) return false;
   const sql = fs.readFileSync(migPath, 'utf8');
@@ -161,7 +163,7 @@ check('Phase 1 SQL migration defines private raw tables and RLS on all public ta
 });
 
 // 9. Phase 1 — Verify synthetic seed generator and supabase/seed.sql
-check('Phase 1 synthetic seed.sql exists and enforces 6 fictional units, 360 personnel, and 12 snapshots', () => {
+await check('Phase 1 synthetic seed.sql exists and enforces 6 fictional units, 360 personnel, and 12 snapshots', () => {
   const seedPath = path.join(rootDir, 'supabase', 'seed.sql');
   if (!fs.existsSync(seedPath)) return false;
   const content = fs.readFileSync(seedPath, 'utf8');
@@ -176,9 +178,70 @@ check('Phase 1 synthetic seed.sql exists and enforces 6 fictional units, 360 per
 });
 
 // 10. Phase 1 — Verify permission tests run cleanly
-check('Phase 1 permission test file exists in backend/tests/permissions.test.js', () => {
+await check('Phase 1 permission test file exists in backend/tests/permissions.test.js', () => {
   const permTestPath = path.join(rootDir, 'backend', 'tests', 'permissions.test.js');
   return fs.existsSync(permTestPath);
+});
+
+// 11. Phase 2 — Verify metrics and release modules exist and are exported
+await check('Phase 2 metrics.js and release.js exist and are re-exported from backend/src/index.js', async () => {
+  const metricsPath = path.join(rootDir, 'backend', 'src', 'metrics.js');
+  const releasePath = path.join(rootDir, 'backend', 'src', 'release.js');
+  if (!fs.existsSync(metricsPath) || !fs.existsSync(releasePath)) return false;
+
+  const backend = await import('../backend/src/index.js');
+  return (
+    typeof backend.computeWeeklySourceMetrics === 'function' &&
+    typeof backend.runWeeklyRelease === 'function'
+  );
+});
+
+// 12. Phase 2 — Functional smoke test: small-group suppression and idempotent release
+await check('Phase 2 release pipeline suppresses groups under five and never resamples noise on repeat calls', async () => {
+  const { runWeeklyRelease } = await import('../backend/src/release.js');
+  const weekStart = '2026-09-07';
+  const tinyUnit = {
+    personnel: Array.from({ length: 4 }, (_, i) => ({
+      id: `PER-Z-${i + 1}`,
+      unit_id: 'UNIT-E2E-SMALL',
+      active: true,
+      history_start_on: '2026-01-01',
+    })),
+    leaveEligibility: [],
+    leaveRecords: [],
+    dutyRecords: [],
+    deployments: [],
+  };
+
+  const suppressed = runWeeklyRelease({ unitId: 'UNIT-E2E-SMALL', weekStart, sourceData: tinyUnit });
+  if (suppressed.publicRelease.suppression_status !== 'suppressed_small_group') return false;
+  if (Object.keys(suppressed.publicRelease.approved_metrics_json).length !== 0) return false;
+
+  const fullUnit = {
+    personnel: Array.from({ length: 6 }, (_, i) => ({
+      id: `PER-Y-${i + 1}`,
+      unit_id: 'UNIT-E2E-STABLE',
+      active: true,
+      history_start_on: '2026-01-01',
+    })),
+    leaveEligibility: [],
+    leaveRecords: [],
+    dutyRecords: Array.from({ length: 6 }, (_, i) => ({
+      personnel_id: `PER-Y-${i + 1}`,
+      duty_date: '2026-09-13',
+      shift_type: 'day',
+      hours: 8,
+    })),
+    deployments: [],
+  };
+  const first = runWeeklyRelease({ unitId: 'UNIT-E2E-STABLE', weekStart, sourceData: fullUnit });
+  const second = runWeeklyRelease({
+    unitId: 'UNIT-E2E-STABLE',
+    weekStart,
+    sourceData: fullUnit,
+    existingRelease: first,
+  });
+  return second.reused === true && JSON.stringify(second.publicRelease) === JSON.stringify(first.publicRelease);
 });
 
 console.log('\n--------------------------------------------------------');
@@ -187,6 +250,6 @@ if (failures.length > 0) {
   console.log(`Failures:\n  - ${failures.join('\n  - ')}`);
   process.exit(1);
 } else {
-  console.log('✅ Phase 0 and Phase 1 verification passed with zero security defects.');
+  console.log('✅ Phase 0-2 verification passed with zero security defects.');
   process.exit(0);
 }
