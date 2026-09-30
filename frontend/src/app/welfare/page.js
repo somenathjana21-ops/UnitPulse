@@ -73,7 +73,7 @@ export default async function WelfareInboxPage() {
             Unit Load &amp; Recovery Index alerts triggered by deterministic spike or sustained-high conditions.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <span className="hero-badge">Active: {inbox.stats.activeCount}</span>
           {inbox.stats.overdueCount > 0 && (
             <span className="status-pill status-elevated" style={{ fontWeight: 700 }}>
@@ -81,6 +81,9 @@ export default async function WelfareInboxPage() {
             </span>
           )}
           <span className="hero-badge">Closed: {inbox.stats.closedCount}</span>
+          <Link href="/welfare/audit" className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '6px 12px' }}>
+            📋 Access Audit Trail
+          </Link>
         </div>
       </div>
 

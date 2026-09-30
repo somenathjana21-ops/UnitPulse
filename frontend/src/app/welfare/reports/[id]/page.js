@@ -5,6 +5,7 @@ import { fetchUserContext } from '../../../../lib/commander/repository.js';
 import { fetchReportById } from '../../../../lib/welfare/repository.js';
 import { buildReportDetailViewModel } from '../../../../lib/welfare/view-model.js';
 import ReportWorkflowForm from './ReportWorkflowForm.js';
+import BreakGlassPanel from './BreakGlassPanel.js';
 
 export const dynamic = 'force-dynamic';
 
@@ -189,24 +190,8 @@ export default async function WelfareReportDetailPage({ params }) {
         />
       </div>
 
-      {/* Exceptional Access Notice */}
-      <details className="card" style={{ marginBottom: '2rem' }}>
-        <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#fff' }}>
-          Exceptional Individual Access (Break-Glass Protocol)
-        </summary>
-        <div style={{ marginTop: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.7 }}>
-          <p style={{ marginBottom: '0.75rem' }}>
-            Unit Pulse 2.0 operates strictly aggregate-first. If individual leave or roster verification is
-            genuinely required for follow-up intervention, an audited break-glass request must be submitted.
-          </p>
-          <ul style={{ paddingLeft: '1.25rem', marginBottom: '0.75rem' }}>
-            <li>Requires documented operational justification.</li>
-            <li>Restricted to 30-minute auto-expiring window.</li>
-            <li>Limited to max 20 pseudonymous personnel records per page.</li>
-            <li>Every individual row read is recorded in an immutable database audit log.</li>
-          </ul>
-        </div>
-      </details>
+      {/* Exceptional Access Component (Break-Glass Protocol) */}
+      <BreakGlassPanel reportId={report.id} unitId={report.unitId} />
 
       {/* Safety Notice */}
       <div className="safety-box">

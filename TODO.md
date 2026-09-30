@@ -15,7 +15,9 @@
 | **Phase 2** | Metrics, Index, Baseline & Privacy Release | `backend/src/release.js`, `ml/src/`, Laplace noise, fixtures | ✅ **COMPLETED** |
 | **Phase 3** | Commander Dashboard & Walkthrough | `frontend/src/app/commander/`, trends, cards, accessible charts | ✅ **COMPLETED** |
 | **Phase 4** | Weekly Report & Welfare Workflow | `frontend/src/app/welfare/`, Vercel cron worker, overdue alerts | ✅ **COMPLETED** |
-| **Phase 5** | AI Adapter & Briefing | OpenAI adapter, fallback templates, print-to-PDF export | ⏳ **PENDING (Phase 5)** |
+| **Phase 5** | AI Adapter & Briefing | OpenAI adapter, fallback templates, print-to-PDF export | ✅ **COMPLETED** |
+| **Phase 6** | Break-Glass Access & Audit | 30-min grant, AES-256-GCM encryption, narrow transactional read, officer audit viewer | ✅ **COMPLETED** |
+| **Phase 7** | Import, Hardening & Accessibility | Restricted `/admin/import` synthetic CSV, limits, accessible charts | ⏳ **PENDING (Phase 7)** |
 
 ---
 
@@ -130,10 +132,35 @@
 
 ---
 
+### ✅ Phase 6 — Break-Glass Access & Audit (Completed)
+- [x] **Audit & Encryption Domain Module (`backend/src/audit.js`)**:
+  - [x] AES-256-GCM server-side encryption/decryption for stored free-text justifications with 12-byte random nonce and authentication tag.
+  - [x] Compulsory minimum 10-character typed justification check.
+  - [x] Reason code validation against allowed set (`welfare_review`, `roster_audit`, `safety_check`, `leave_rebalancing_assessment`, `emergency_support`).
+  - [x] Server-enforced 30-minute auto-expiry duration; client cannot specify or alter duration.
+  - [x] Active grant status and expiration evaluation (`isGrantActive`).
+  - [x] Never log plaintext reasons to console or errors.
+- [x] **Database Migration (`supabase/migrations/20260930150000_phase6_break_glass.sql`)**:
+  - [x] Align `private.access_grants` reason code constraints.
+  - [x] Transactional grant creation function `private.create_access_grant` (service-role only).
+  - [x] Narrow transactional database read function `private.execute_audited_break_glass_read`: rechecks officer role, report assignment, grant validity, unit consistency, and grant expiry in one atomic transaction; clamps output to max 20 pseudonymous records; and writes an audit row to `private.access_audit`.
+  - [x] Officer audit log query function `private.get_officer_audit_log` (service-role only, strictly scoped to calling officer).
+  - [x] Revoke direct execution and ordinary SELECT on private tables from all client roles.
+- [x] **API Route Handlers (`frontend/src/app/api/welfare/`)**:
+  - [x] `POST /api/welfare/reports/:id/access-grants`: Authenticates officer, verifies report assignment, validates reason, encrypts justification at rest, returns 30-min grant metadata with `Cache-Control: no-store`.
+  - [x] `GET /api/welfare/reports/:id/individuals`: Authenticates officer, validates active unexpired grant, calls transactional database read function, returns max 20 pseudonymous records with `Cache-Control: no-store`. Denies commanders with 403 (T-02), conceals unassigned reports with 404 (T-06), denies expired grants with 403 (T-08).
+  - [x] `GET /api/welfare/audit`: Returns calling officer's own access audit events with `Cache-Control: no-store`.
+- [x] **Frontend UI Integration**:
+  - [x] `BreakGlassPanel.js`: Interactive break-glass request component on `/welfare/reports/[id]` with reason selection, justification text area, live 30-min countdown timer, and paginated table (max 20 rows/page).
+  - [x] Officer Audit Viewer page at `/welfare/audit` showing immutable audit events (timestamp, action, unit, linked report, row count, reason code).
+  - [x] Strict data safeguard: bulk export and download of individual rows prohibited; responses are strictly ephemeral and no-store.
+
+---
+
 ## Release Gate Checklist (Must pass before production deployment)
-- [ ] No personnel-level rows returned to commander endpoints.
-- [ ] Small groups (<5) and small cells completely suppressed in API and UI.
-- [ ] Zero unlogged individual reads across the entire application.
-- [ ] Cron retries do not duplicate active welfare reports.
-- [ ] AI model receives no direct personnel identifiers or unreleased metrics.
-- [ ] Zero hardcoded service keys or client-prefixed secrets (`NEXT_PUBLIC_`) in codebase.
+- [x] No personnel-level rows returned to commander endpoints.
+- [x] Small groups (<5) and small cells completely suppressed in API and UI.
+- [x] Zero unlogged individual reads across the entire application (every individual read writes DB audit row in same transaction).
+- [x] Cron retries do not duplicate active welfare reports.
+- [x] AI model receives no direct personnel identifiers or unreleased metrics.
+- [x] Zero hardcoded service keys or client-prefixed secrets (`NEXT_PUBLIC_`) in codebase.

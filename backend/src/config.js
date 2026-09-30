@@ -10,6 +10,8 @@
  * 3. Browser code must never have access to this module.
  */
 
+import { createClient } from '@supabase/supabase-js';
+
 export const SENSITIVE_PATTERNS = [
   'SERVICE_ROLE',
   'CRON_SECRET',
@@ -80,3 +82,32 @@ export function getServerConfig(env = process.env) {
     },
   };
 }
+
+/**
+ * Returns an elevated server-only service-role client for narrow, authenticated routes.
+ *
+ * NON-NEGOTIABLE SAFETY RULES:
+ * 1. This client is strictly server-only. SUPABASE_SERVICE_ROLE_KEY is never exposed to browser.
+ * 2. Only used after authenticating the calling user session and verifying their role.
+ * 3. Database functions re-verify identity, assignment, and grant expiry internally.
+ *
+ * @param {Record<string, string|undefined>} [env=process.env]
+ * @returns {import('@supabase/supabase-js').SupabaseClient|null}
+ */
+export function getServiceRoleClient(env = process.env) {
+  const config = getServerConfig(env);
+  const url = config.supabase.url;
+  const key = config.supabase.serviceRoleKey;
+
+  if (!url || !key) {
+    return null;
+  }
+
+  return createClient(url, key, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+

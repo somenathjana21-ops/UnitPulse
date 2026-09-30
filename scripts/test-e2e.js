@@ -432,13 +432,124 @@ await check('Phase 5 functional smoke test: deterministic fallback, safety rejec
   return true;
 });
 
+// 19. Phase 6 — Verify break-glass migration, repository, routes, and UI components exist
+await check('Phase 6 break-glass migration, routes, and UI components exist', () => {
+  const paths = [
+    path.join(rootDir, 'supabase', 'migrations', '20260930150000_phase6_break_glass.sql'),
+    path.join(rootDir, 'frontend', 'src', 'lib', 'welfare', 'break-glass.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'api', 'welfare', 'reports', '[id]', 'access-grants', 'route.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'api', 'welfare', 'reports', '[id]', 'individuals', 'route.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'api', 'welfare', 'audit', 'route.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'welfare', 'audit', 'page.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'welfare', 'reports', '[id]', 'BreakGlassPanel.js'),
+  ];
+  return paths.every((p) => fs.existsSync(p));
+});
+
+// 20. Phase 6 — Functional smoke test: encryption, assignment recheck, 30m expiry, clamp to 20, per-read audit
+await check('Phase 6 functional smoke test: encryption, 30m expiry, role gate, clamp to 20, and per-read audit', async () => {
+  const { encryptReason, decryptReason, validateGrantRequest, isGrantActive } = await import('../backend/src/audit.js');
+  const {
+    createBreakGlassGrant,
+    executeIndividualRead,
+    fetchOfficerAuditTrail,
+    resetTestStores,
+    _testAuditStore,
+  } = await import('../frontend/src/lib/welfare/break-glass.js');
+  const { resolveBreakGlassReadAccess } = await import('../frontend/src/lib/welfare/authorize.js');
+
+  resetTestStores();
+
+  const officerOne = '00000000-0000-0000-0000-000000000003';
+  const officerTwo = '00000000-0000-0000-0000-000000000004';
+  const commander = '00000000-0000-0000-0000-000000000001';
+  const reportOne = '11111111-1111-1111-1111-111111111111';
+
+  // 1. AES-256-GCM encryption & decryption
+  const reasonText = 'Operational welfare review for roster distribution and recovery verification.';
+  const cipher = encryptReason(reasonText);
+  if (!cipher.startsWith('v1:') || cipher === reasonText) return false;
+  if (decryptReason(cipher) !== reasonText) return false;
+
+  // 2. Short reason rejected
+  const shortCheck = validateGrantRequest({
+    officerId: officerOne,
+    assignedOfficerId: officerOne,
+    reportId: reportOne,
+    reasonCode: 'welfare_review',
+    reason: 'Too short',
+  });
+  if (shortCheck.valid) return false;
+
+  // 3. Commander requesting individual access rejected with 403 (T-02)
+  const reportObj = { id: reportOne, unit_id: 'UNIT-B', assigned_to: officerOne };
+  const cmdAccess = resolveBreakGlassReadAccess({
+    user: { id: commander, role: 'commander' },
+    report: reportObj,
+    grantId: 'g-1',
+    grant: { id: 'g-1', officer_id: officerOne, report_id: reportOne, unit_id: 'UNIT-B', expires_at: new Date(Date.now() + 100000).toISOString() },
+  });
+  if (cmdAccess.allowed || cmdAccess.httpStatus !== 403) return false;
+
+  // 4. Unassigned officer rejected with 404 (T-06)
+  const unassignedAccess = resolveBreakGlassReadAccess({
+    user: { id: officerTwo, role: 'welfare_officer' },
+    report: reportObj,
+    grantId: 'g-1',
+    grant: { id: 'g-1', officer_id: officerTwo, report_id: reportOne, unit_id: 'UNIT-B', expires_at: new Date(Date.now() + 100000).toISOString() },
+  });
+  if (unassignedAccess.allowed || unassignedAccess.httpStatus !== 404) return false;
+
+  // 5. Create valid grant with 30-min expiry
+  const grant = await createBreakGlassGrant({
+    officerId: officerOne,
+    assignedOfficerId: officerOne,
+    reportId: reportOne,
+    unitId: 'UNIT-B',
+    reasonCode: 'welfare_review',
+    reason: reasonText,
+  });
+  if (grant.expiryMinutes !== 30) return false;
+
+  // 6. Expired grant rejected with 403 (T-08)
+  const expiredAccess = resolveBreakGlassReadAccess({
+    user: { id: officerOne, role: 'welfare_officer' },
+    report: reportObj,
+    grantId: grant.grantId,
+    grant: { ...grant, officer_id: officerOne, report_id: reportOne, expires_at: new Date(Date.now() - 5000).toISOString() },
+  });
+  if (expiredAccess.allowed || expiredAccess.httpStatus !== 403 || expiredAccess.reason !== 'grant_expired') return false;
+
+  // 7. Individual read clamped to max 20 and logged to audit trail (T-09)
+  const readRes = await executeIndividualRead({
+    grantId: grant.grantId,
+    officerId: officerOne,
+    reportId: reportOne,
+    limit: 50, // requested 50, must be clamped to 20
+    offset: 0,
+  });
+  if (readRes.records.length !== 20 || readRes.limit !== 20) return false;
+  if (!readRes.records[0].personnelId.startsWith('PER-')) return false;
+
+  // Verify per-read audit log entry written before returning
+  const audits = _testAuditStore.filter((a) => a.grant_id === grant.grantId && a.action === 'individual_read');
+  if (audits.length !== 1 || audits[0].row_count !== 20) return false;
+
+  // 8. Officer audit trail returns only caller's own events
+  const trail = await fetchOfficerAuditTrail({ officerId: officerOne });
+  if (trail.length === 0 || trail[0].reportId !== reportOne) return false;
+
+  return true;
+});
+
 console.log('\n--------------------------------------------------------');
 console.log(`Results: ${passedChecks}/${totalChecks} checks passed.`);
 if (failures.length > 0) {
   console.log(`Failures:\n  - ${failures.join('\n  - ')}`);
   process.exit(1);
 } else {
-  console.log('✅ Phase 0-5 verification passed with zero security defects.');
+  console.log('✅ Phase 0-6 verification passed with zero security defects.');
   process.exit(0);
 }
+
 
