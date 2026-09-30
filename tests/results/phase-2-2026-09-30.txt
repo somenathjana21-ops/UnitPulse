@@ -1,4 +1,7 @@
 === Phase 2 Verification Test Run: 2026-09-30 ===
+(Includes the Phase 2 Guidebook verification pass: boundary-value audit,
+ absent/zero-denominator audit, and privacy-leak review, in addition to
+ the implementation's own test suite.)
 
 --- Command 1: npm run lint ---
 
@@ -35,8 +38,8 @@ Exit code: 0
 > @unitpulse/frontend@0.1.0 test
 > node --test
 
-✔ frontend successfully resolves and invokes @unitpulse/backend exports (0.4818ms)
-✔ frontend successfully resolves and invokes @unitpulse/ml exports (0.3254ms)
+✔ frontend successfully resolves and invokes @unitpulse/backend exports (0.4618ms)
+✔ frontend successfully resolves and invokes @unitpulse/ml exports (0.3232ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -44,104 +47,113 @@ Exit code: 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 91.818
+ℹ duration_ms 90.5637
 
 > @unitpulse/backend@0.1.0 test
 > node --test
 
-✔ validateEnvironmentSecurity rejects forbidden client prefixes on server secrets (1.9147ms)
-✔ validateGrantRequest verifies assigned officer and required reason length (2.1144ms)
-✔ validateStatusTransition enforces valid welfare lifecycle state transitions (1.3582ms)
-✔ computeWeeklySourceMetrics computes leave utilization, recovery gap, and denial rate from raw records (5.3841ms)
-✔ computeWeeklySourceMetrics excludes unverified/missing records instead of assuming zero (0.6165ms)
-✔ computeWeeklySourceMetrics reports insufficient_data when domain coverage drops below 80% (0.5116ms)
-✔ computeWeeklySourceMetrics respects the 28-day night-duty and 7-day workload window boundaries (0.3735ms)
-✔ computeWeeklySourceMetrics treats verified non-deployed personnel as a confirmed zero, not missing (0.3665ms)
-✔ computeWeeklySourceMetrics excludes personnel with unverified enrollment from deployment coverage (0.2374ms)
+✔ validateEnvironmentSecurity rejects forbidden client prefixes on server secrets (2.1018ms)
+✔ validateGrantRequest verifies assigned officer and required reason length (1.2533ms)
+✔ validateStatusTransition enforces valid welfare lifecycle state transitions (1.5593ms)
+✔ computeWeeklySourceMetrics computes leave utilization, recovery gap, and denial rate from raw records (5.3202ms)
+✔ computeWeeklySourceMetrics excludes unverified/missing records instead of assuming zero (0.5881ms)
+✔ computeWeeklySourceMetrics reports insufficient_data when domain coverage drops below 80% (0.4926ms)
+✔ computeWeeklySourceMetrics respects the 28-day night-duty and 7-day workload window boundaries (0.3122ms)
+✔ computeWeeklySourceMetrics treats verified non-deployed personnel as a confirmed zero, not missing (0.2971ms)
+✔ computeWeeklySourceMetrics reports leave utilization as unavailable (null), not zero, when eligible days is zero (0.2151ms)
+✔ computeWeeklySourceMetrics excludes personnel with unverified enrollment from deployment coverage (0.2198ms)
   [STATUS: NOT RUN] Live Postgres execution skipped (No local Docker or remote DB configured).
 ▶ Phase 1 — SQL Migration Security & Architectural Invariants
-  ✔ Migration file exists and defines private and public schemas (2.0356ms)
-  ✔ All raw operational source tables are placed strictly in private schema (0.783ms)
-  ✔ Row Level Security is enabled on every client-facing table (0.8754ms)
-  ✔ Does NOT attempt to put Row Level Security on a materialized view (0.9028ms)
-  ✔ Enforces partial unique index for at most one active welfare report per unit (0.4419ms)
-  ✔ Provides narrow role provisioning restricted to service_role (0.3239ms)
-✔ Phase 1 — SQL Migration Security & Architectural Invariants (6.9768ms)
+  ✔ Migration file exists and defines private and public schemas (1.0406ms)
+  ✔ All raw operational source tables are placed strictly in private schema (0.4172ms)
+  ✔ Row Level Security is enabled on every client-facing table (0.4353ms)
+  ✔ Does NOT attempt to put Row Level Security on a materialized view (0.5452ms)
+  ✔ Enforces partial unique index for at most one active welfare report per unit (0.3341ms)
+  ✔ Provides narrow role provisioning restricted to service_role (0.3923ms)
+✔ Phase 1 — SQL Migration Security & Architectural Invariants (4.1223ms)
 ▶ Phase 1 — Access Control & Role Permission Boundary Tests
-  ✔ Anonymous user cannot query private raw personnel tables (0.3445ms)
-  ✔ Anonymous user cannot read public unit_week_releases (0.1893ms)
-  ✔ Anonymous user cannot read public welfare_reports (0.7809ms)
-  ✔ Anonymous user cannot mutate user_roles (0.2771ms)
-  ✔ Commander Alpha CAN read public releases for their assigned unit (UNIT-A) (0.2165ms)
-  ✔ Commander Alpha CANNOT read public releases for another unit (UNIT-B) (0.1288ms)
-  ✔ Commander Alpha CANNOT directly query private raw personnel tables (0.1187ms)
-  ✔ Commander Alpha CANNOT access confidential welfare reports (0.1444ms)
-  ✔ Commander Alpha CANNOT modify user_roles (self-role elevation blocked) (0.1649ms)
-  ✔ Commander Alpha CANNOT modify unit_assignments (self-unit assignment blocked) (0.2159ms)
-  ✔ Welfare Officer Primary CAN access report assigned to them (0.1551ms)
-  ✔ Welfare Officer Secondary CANNOT access report assigned to Officer Primary (0.1758ms)
-✔ Phase 1 — Access Control & Role Permission Boundary Tests (3.9312ms)
+  ✔ Anonymous user cannot query private raw personnel tables (0.308ms)
+  ✔ Anonymous user cannot read public unit_week_releases (0.1861ms)
+  ✔ Anonymous user cannot read public welfare_reports (0.2517ms)
+  ✔ Anonymous user cannot mutate user_roles (0.2169ms)
+  ✔ Commander Alpha CAN read public releases for their assigned unit (UNIT-A) (0.1391ms)
+  ✔ Commander Alpha CANNOT read public releases for another unit (UNIT-B) (0.0831ms)
+  ✔ Commander Alpha CANNOT directly query private raw personnel tables (0.0863ms)
+  ✔ Commander Alpha CANNOT access confidential welfare reports (0.0876ms)
+  ✔ Commander Alpha CANNOT modify user_roles (self-role elevation blocked) (0.0826ms)
+  ✔ Commander Alpha CANNOT modify unit_assignments (self-unit assignment blocked) (0.0787ms)
+  ✔ Welfare Officer Primary CAN access report assigned to them (0.0601ms)
+  ✔ Welfare Officer Secondary CANNOT access report assigned to Officer Primary (0.0759ms)
+✔ Phase 1 — Access Control & Role Permission Boundary Tests (2.1112ms)
 ▶ Phase 1 — Synthetic Seed Dataset Safety Invariants
-  ✔ Generates exactly 6 fictional units with synthetic naming (0.2829ms)
-  ✔ Generates exactly 60 synthetic personnel per unit (360 total) with pseudonyms only (0.556ms)
-  ✔ Contains approximately 180 days of history and 12 usable completed snapshots (0.1517ms)
-  ✔ Includes exactly one elevated unit (UNIT-B) and one stable unit (UNIT-A) (0.1958ms)
-  ✔ Public releases contain ZERO personal identifiers (0.1655ms)
-  ✔ supabase/seed.sql exists and is populated with valid SQL statements (8.4975ms)
-✔ Phase 1 — Synthetic Seed Dataset Safety Invariants (10.2044ms)
+  ✔ Generates exactly 6 fictional units with synthetic naming (0.1994ms)
+  ✔ Generates exactly 60 synthetic personnel per unit (360 total) with pseudonyms only (0.3017ms)
+  ✔ Contains approximately 180 days of history and 12 usable completed snapshots (0.0562ms)
+  ✔ Includes exactly one elevated unit (UNIT-B) and one stable unit (UNIT-A) (0.0848ms)
+  ✔ Public releases contain ZERO personal identifiers (0.129ms)
+  ✔ supabase/seed.sql exists and is populated with valid SQL statements (7.8323ms)
+✔ Phase 1 — Synthetic Seed Dataset Safety Invariants (8.8638ms)
 ▶ Phase 1 — Hostile Penetration & Adversarial Security Scenarios
-  ✔ Hostile Scenario 1: PostgREST schema boundary stops direct queries to private raw tables (0.4696ms)
-  ✔ Hostile Scenario 2: Service-role credentials are strictly server-only and not leaked to client (0.9811ms)
-  ✔ Hostile Scenario 3: SQL injection or manipulated unit ID in release queries yields zero unauthorized records (0.1246ms)
-  ✔ Hostile Scenario 4: Role self-escalation via client INSERT/UPDATE is blocked (0.0581ms)
-  ✔ Hostile Scenario 5: Unit assignment self-escalation via client INSERT is blocked (0.0443ms)
-  ✔ Hostile Scenario 6: Commander cannot access welfare case notes or reports (0.0406ms)
-  ✔ Hostile Scenario 7: Unassigned welfare officer cannot snoop on another officer case (0.045ms)
-  ✔ Hostile Scenario 8: Direct execution of break-glass read is revoked from client roles (0.231ms)
-  ✔ Hostile Scenario 9: Zero personal identifiers leaked across all published releases (10.0816ms)
-✔ Phase 1 — Hostile Penetration & Adversarial Security Scenarios (12.3249ms)
+  ✔ Hostile Scenario 1: PostgREST schema boundary stops direct queries to private raw tables (0.2786ms)
+  ✔ Hostile Scenario 2: Service-role credentials are strictly server-only and not leaked to client (1.0982ms)
+  ✔ Hostile Scenario 3: SQL injection or manipulated unit ID in release queries yields zero unauthorized records (0.1604ms)
+  ✔ Hostile Scenario 4: Role self-escalation via client INSERT/UPDATE is blocked (0.0716ms)
+  ✔ Hostile Scenario 5: Unit assignment self-escalation via client INSERT is blocked (0.0414ms)
+  ✔ Hostile Scenario 6: Commander cannot access welfare case notes or reports (0.037ms)
+  ✔ Hostile Scenario 7: Unassigned welfare officer cannot snoop on another officer case (0.0375ms)
+  ✔ Hostile Scenario 8: Direct execution of break-glass read is revoked from client roles (0.2212ms)
+  ✔ Hostile Scenario 9: Zero personal identifiers leaked across all published releases (9.3622ms)
+✔ Phase 1 — Hostile Penetration & Adversarial Security Scenarios (11.5713ms)
 ▶ Phase 1 — Live Database / Docker Connection Status
-  ✔ Evaluates live database status without falsely claiming unrun tests (0.6754ms)
-✔ Phase 1 — Live Database / Docker Connection Status (0.775ms)
-✔ checkGroupSuppression suppresses groups smaller than MIN_GROUP_SIZE (5) (1.3772ms)
-✔ checkCellSuppression suppresses small cells (<5) and revealing complements (0.31ms)
-✔ validatePublicReleasePayload throws error if personal or unreleased fields are present (0.7405ms)
-✔ deriveReleaseBand maps the index to the public DB band vocabulary (0.6749ms)
-✔ fixture: group size four is fully suppressed, no figures leak (2.4022ms)
-✔ fixture: group size five with a one-person breakout suppresses only the revealing cell (1.4522ms)
-✔ fixture: incomplete duty coverage yields "insufficient data", never a zero index (0.4342ms)
-✔ fixture: repeated release calls return identical stored values, never resampled (0.7516ms)
-✔ fixture: baseline boundary -- spike rule requires at least four comparable prior weeks (1.2466ms)
-✔ fixture: a triggered unit produces a deduplicated sustained-high result (1.0744ms)
-ℹ tests 53
+  ✔ Evaluates live database status without falsely claiming unrun tests (0.7088ms)
+✔ Phase 1 — Live Database / Docker Connection Status (0.8193ms)
+✔ checkGroupSuppression suppresses groups smaller than MIN_GROUP_SIZE (5) (1.3047ms)
+✔ checkCellSuppression suppresses small cells (<5) and revealing complements (0.3112ms)
+✔ validatePublicReleasePayload throws error if personal or unreleased fields are present (0.7308ms)
+✔ deriveReleaseBand maps the index to the public DB band vocabulary (0.7241ms)
+✔ fixture: group size four is fully suppressed, no figures leak (2.5629ms)
+✔ fixture: group size five with a one-person breakout suppresses only the revealing cell (1.4811ms)
+✔ fixture: incomplete duty coverage yields "insufficient data", never a zero index (0.4943ms)
+✔ fixture: repeated release calls return identical stored values, never resampled (0.8821ms)
+✔ fixture: baseline boundary -- spike rule requires at least four comparable prior weeks (1.3349ms)
+✔ fixture: a triggered unit produces a deduplicated sustained-high result (0.9069ms)
+ℹ tests 54
 ℹ suites 5
-ℹ pass 53
+ℹ pass 54
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 230.0672
+ℹ duration_ms 198.7436
 
 > @unitpulse/ml@0.1.0 test
 > node --test
 
-✔ calculateMedian correctly computes median for odd and even length arrays (0.5363ms)
-✔ calculateBaseline requires at least 4 comparable weeks for spike analysis (0.1711ms)
-✔ evaluateTriggers fires spike trigger when index >= 40 and index >= baseline + 15 (0.7999ms)
-✔ evaluateTriggers fires sustained-high trigger when index >= 75 for two consecutive weeks (0.1246ms)
-✔ evaluateTriggers deduplicates when an active report already exists (0.0965ms)
-✔ calculateUnitStrainIndex returns insufficient_data when coverage is below 80% (0.9369ms)
+✔ calculateMedian correctly computes median for odd and even length arrays (0.5771ms)
+✔ calculateBaseline requires at least 4 comparable weeks for spike analysis (0.1976ms)
+✔ evaluateTriggers fires spike trigger when index >= 40 and index >= baseline + 15 (0.9807ms)
+✔ evaluateTriggers fires sustained-high trigger when index >= 75 for two consecutive weeks (0.2904ms)
+✔ evaluateTriggers deduplicates when an active report already exists (0.2064ms)
+✔ boundary: days-since-leave >60 is strict (60 = 0 pts, 61 = 15 pts) (1.1698ms)
+✔ boundary: recovery gap >35% is strict (35 = 0 pts, 36 = 10 pts) (0.243ms)
+✔ boundary: denial rate >25% is strict, and requires >=5 decided requests (0.2658ms)
+✔ boundary: night-duty tiers (5/8/12) are strict (0.2037ms)
+✔ boundary: deployment tiers (60/90) are strict (0.1429ms)
+✔ boundary: workload tiers (52/60) are strict (0.1096ms)
+✔ boundary: coverage ratio exactly at MIN_COVERAGE_RATIO is sufficient, just below is not (0.1022ms)
+✔ absent/zero denominator: an empty metrics object never throws and never fabricates risk (0.0773ms)
+✔ calculateUnitStrainIndex returns insufficient_data when coverage is below 80% (0.6858ms)
 ✔ calculateUnitStrainIndex produces 0 for clean healthy metrics (0.1622ms)
-✔ calculateUnitStrainIndex awards correct points for elevated metrics with standard mask (0.0998ms)
-✔ calculateUnitStrainIndex normalizes score when leave denial rule is omitted (0.0885ms)
-ℹ tests 9
+✔ calculateUnitStrainIndex awards correct points for elevated metrics with standard mask (0.0968ms)
+✔ calculateUnitStrainIndex normalizes score when leave denial rule is omitted (0.0882ms)
+ℹ tests 17
 ℹ suites 0
-ℹ pass 9
+ℹ pass 17
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 92.6486
+ℹ duration_ms 102.8475
 Exit code: 0
 
 --- Command 3: npm run test:e2e ---

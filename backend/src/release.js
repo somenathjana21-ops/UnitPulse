@@ -15,6 +15,12 @@
  * published and this function returns it unchanged. Noise is sampled at
  * most once per unit/week; callers MUST persist the returned release and
  * pass it back in on the next run instead of recomputing.
+ *
+ * WARNING for any future API route (Phase 3+): runWeeklyRelease() returns
+ * BOTH `privateMetrics` (exact, unsuppressed figures for the private schema)
+ * and `publicRelease` (the suppressed/noised payload safe for RLS-protected
+ * client tables). A commander- or welfare-facing route must serialize ONLY
+ * `.publicRelease` -- never the whole return value or `.privateMetrics`.
  */
 
 import {

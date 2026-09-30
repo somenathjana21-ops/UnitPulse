@@ -197,6 +197,29 @@ test('computeWeeklySourceMetrics treats verified non-deployed personnel as a con
   assert.equal(result.counts.deployedPersonnelCount, 1);
 });
 
+test('computeWeeklySourceMetrics reports leave utilization as unavailable (null), not zero, when eligible days is zero', () => {
+  const personnel = makePersonnel(2);
+  const leaveEligibility = personnel.map((p) => ({
+    personnel_id: p.id,
+    snapshot_week: WEEK_START,
+    eligible_days_90d: 0, // verified, but nothing to divide by
+    verified: true,
+  }));
+
+  const result = computeWeeklySourceMetrics({
+    unitId: UNIT_ID,
+    weekStart: WEEK_START,
+    personnel,
+    leaveEligibility,
+    leaveRecords: [],
+    dutyRecords: [],
+    deployments: [],
+  });
+
+  assert.equal(result.coverage.leave, 1); // domain is verified/covered
+  assert.equal(result.metrics.leaveUtilizationPercent, null); // but the ratio itself is unavailable
+});
+
 test('computeWeeklySourceMetrics excludes personnel with unverified enrollment from deployment coverage', () => {
   const personnel = [
     { id: 'PER-001', unit_id: UNIT_ID, active: true, history_start_on: '2026-01-01' },
