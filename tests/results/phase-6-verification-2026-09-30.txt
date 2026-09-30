@@ -1,0 +1,122 @@
+﻿================================================================
+Unit Pulse 2.0 ΓÇö Phase 6 Independent Verification Pass
+================================================================
+
+--- SCENARIO 1: Commander Request ---
+[PASS] Scenario 1.1: Commander requesting grant is strictly denied (HTTP 403)
+       Evidence: Verdict: HTTP 403, reason: role_not_welfare_officer
+[PASS] Scenario 1.2: Commander attempting individual read is strictly denied (HTTP 403)
+       Evidence: Verdict: HTTP 403, reason: role_not_welfare_officer
+[PASS] Scenario 1.3: Commander cannot obtain any individual data
+       Evidence: No grants or audit rows exist for commander
+
+--- SCENARIO 2: Unrelated Officer ---
+[PASS] Scenario 2.1: Unrelated officer requesting grant is concealed with HTTP 404 (no existence leak)
+       Evidence: Verdict: HTTP 404, reason: report_not_assigned_to_user
+[PASS] Scenario 2.2: Unrelated officer attempting read is concealed with HTTP 404
+       Evidence: Verdict: HTTP 404, reason: report_not_assigned_to_user
+[PASS] Scenario 2.3: Domain logic rejects grant request for unassigned officer
+       Evidence: Validation error: "Officer is not assigned to this report"
+
+--- SCENARIO 3: Missing or Invalid Reason ---
+[PASS] Scenario 3.1: Empty reason string rejected
+       Evidence: Error: "Reason must be at least 10 characters explaining operational welfare purpose"
+[PASS] Scenario 3.2: Short reason string ("urgent", 6 chars) rejected
+       Evidence: Error: "Reason must be at least 10 characters explaining operational welfare purpose"
+[PASS] Scenario 3.3: Unapproved reason code rejected
+       Evidence: Error: "Invalid or missing reason code. Must be one of: welfare_review, roster_audit, safety_check, leave_rebalancing_assessment, emergency_support"
+[PASS] Scenario 3.4: createBreakGlassGrant throws error on short reason and stores nothing
+       Evidence: Grant store remained empty
+
+--- SCENARIO 4: Altered Report ID ---
+[PASS] Scenario 4.1: Altered report ID denied at authorization gate
+       Evidence: Verdict: HTTP 404, reason: report_not_assigned_to_user
+[PASS] Scenario 4.2: executeIndividualRead throws grant_mismatch when report ID is altered
+       Evidence: Mismatched report ID prevented execution
+
+--- SCENARIO 5: Altered Unit ID ---
+[PASS] Scenario 5.1: Altered unit ID detected and rejected (HTTP 403 unit_mismatch)
+       Evidence: Verdict: HTTP 403, reason: unit_mismatch
+[PASS] Scenario 5.2: SQL migration strictly rechecks v_grant.unit_id <> v_report.unit_id
+       Evidence: Transactional function enforces unit consistency
+
+--- SCENARIO 6: Expired Grant ---
+[PASS] Scenario 6.1: isGrantActive returns false after 31 minutes
+       Evidence: Active status: false
+[PASS] Scenario 6.2: resolveBreakGlassReadAccess returns HTTP 403 grant_expired after expiry
+       Evidence: Verdict: HTTP 403, reason: grant_expired
+[PASS] Scenario 6.3: SQL migration checks v_grant.expires_at <= now() in transactional read
+       Evidence: Database raises exception when grant is expired
+
+--- SCENARIO 7: Revoked Grant ---
+[PASS] Scenario 7.1: isGrantActive returns false for revoked grant
+       Evidence: Active status: false
+[PASS] Scenario 7.2: resolveBreakGlassReadAccess returns HTTP 403 grant_revoked for revoked grant
+       Evidence: Verdict: HTTP 403, reason: grant_revoked
+[PASS] Scenario 7.3: executeIndividualRead throws grant_revoked when grant is revoked
+       Evidence: Revoked grant cannot read individual rows
+[PASS] Scenario 7.4: SQL migration checks v_grant.is_revoked = true in transactional read
+       Evidence: Database raises exception when grant is revoked
+
+--- SCENARIO 8: Direct Private-Table Query ---
+[PASS] Scenario 8.1: Initial schema revokes all privileges on schema private from public, anon, and authenticated
+       Evidence: Clients cannot query private schema directly
+[PASS] Scenario 8.2: Row Level Security enabled on private.access_grants and private.access_audit
+       Evidence: RLS enabled on all private tables
+[PASS] Scenario 8.3: Transactional read function revoked from client roles; granted exclusively to service_role
+       Evidence: Ordinary clients cannot execute read function directly
+
+--- SCENARIO 9: Repeated Paginated Reads & Audit Row Verification ---
+[PASS] Scenario 9.1: Page 1 read returns exactly requested 10 rows
+       Evidence: Returned 10 records (IDs: PER-B-001 ... PER-B-010)
+[PASS] Scenario 9.2: Page 1 read atomically generates exactly 1 audit row
+       Evidence: Audit row 1: actor=usr-welfare-001, rows=10, action=individual_read
+[PASS] Scenario 9.3: Page 2 read returns next 10 rows with distinct personnel IDs
+       Evidence: Returned 10 records (IDs: PER-B-011 ... PER-B-020)
+[PASS] Scenario 9.4: Page 2 read generates second audit row (cumulative 2 audit rows)
+       Evidence: Audit row 2: actor=usr-welfare-001, rows=10
+[PASS] Scenario 9.5: Requested limit of 100 rows is strictly clamped to maximum 20 records
+       Evidence: Clamped count: 20, limit: 20
+[PASS] Scenario 9.6: Audit row records clamped count (20 rows)
+       Evidence: Audit row 3 row_count: 20
+[PASS] Scenario 9.7: Failed read throws and returns zero individual data
+       Evidence: No data returned on failure
+
+--- SCENARIO 10: Reason Encryption at Rest & Zero Plaintext Logging ---
+[PASS] Scenario 10.1: Stored reason matches AES-256-GCM format (v1:<12-byte IV>:<16-byte Tag>:<Ciphertext>)
+       Evidence: Encrypted payload: v1:55ea72d56384a8f7c8316bf6:d382599b... [total 199 chars]
+[PASS] Scenario 10.2: Plaintext reason string is completely absent from stored ciphertext
+       Evidence: No plaintext substrings found in encrypted payload
+[PASS] Scenario 10.3: Decryption with system secret recovers original typed justification
+       Evidence: Decrypted: "Conducting confidential review of high night shifts and leave denials"
+[PASS] Scenario 10.4: Bit tampering in ciphertext triggers cryptographic auth tag verification failure
+       Evidence: GCM authentication prevents payload tampering
+[PASS] Scenario 10.5: Audit log stores only reason_code; plaintext justification is never logged in audit table
+       Evidence: Audit entry contains reason_code: "welfare_review", zero plaintext
+
+--- SCENARIO 11: Direct Unlogged Read Path Audit ---
+[PASS] Scenario 11.1: Exactly ONE API route exists for individual records (/api/welfare/reports/[id]/individuals)
+       Evidence: Discovered route: frontend\src\app\api\welfare\reports\[id]\individuals\route.js
+[PASS] Scenario 11.2: Individual route enforces executeIndividualRead and Cache-Control: no-store
+       Evidence: Route strictly calls audited execution and prohibits browser caching
+[PASS] Scenario 11.3: Database read function atomically inserts into private.access_audit on every read
+       Evidence: No unlogged database read path exists
+[PASS] Scenario 11.4: Officer audit viewer isolates audit trails (Officer B sees 0 events from Officer A)
+       Evidence: Officer A sees 3 own events; Officer B sees 0 events
+
+================================================================
+Verification Complete: 40/40 checks PASSED.
+================================================================
+
+ALL PHASE 6 VERIFICATION REQUIREMENTS CONFIRMED:
+1. Commander requests strictly denied (403)
+2. Unrelated officers concealed with 404
+3. Missing/short reasons rejected (min 10 chars enforced)
+4. Altered report ID rejected (grant mismatch)
+5. Altered unit ID rejected (unit mismatch)
+6. Expired grants rejected (403 grant_expired)
+7. Revoked grants rejected (403 grant_revoked)
+8. Direct private-table queries revoked from client roles
+9. Repeated reads produce 1 audit row each; limits clamped to 20
+10. Reasons encrypted at rest (AES-256-GCM); zero plaintext logging
+11. Zero direct unlogged read paths exist

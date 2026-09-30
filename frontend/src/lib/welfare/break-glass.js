@@ -226,9 +226,13 @@ export async function getBreakGlassGrant({
     return { grant: null, active: false, remainingMinutes: 0 };
   }
 
-  const active = isGrantActive({ expiresAt: grant.expires_at, officerId: grant.officer_id }, officerId);
+  const active = isGrantActive({
+    expiresAt: grant.expires_at,
+    officerId: grant.officer_id,
+    is_revoked: grant.is_revoked,
+  }, officerId);
   const remainingMs = new Date(grant.expires_at).getTime() - Date.now();
-  const remainingMinutes = Math.max(0, Math.ceil(remainingMs / (60 * 1000)));
+  const remainingMinutes = active ? Math.max(0, Math.ceil(remainingMs / (60 * 1000))) : 0;
 
   return {
     grant,
@@ -274,7 +278,9 @@ export async function executeIndividualRead({
 
     if (error) {
       const err = new Error(error.message);
-      if (error.message.includes('expired')) {
+      if (error.message.includes('revoked')) {
+        err.code = 'grant_revoked';
+      } else if (error.message.includes('expired')) {
         err.code = 'grant_expired';
       } else if (error.message.includes('not found')) {
         err.code = 'grant_not_found';
@@ -316,7 +322,13 @@ export async function executeIndividualRead({
     throw err;
   }
 
-  if (!isGrantActive({ expiresAt: grant.expires_at, officerId: grant.officer_id }, officerId)) {
+  if (grant.is_revoked || grant.isRevoked || grant.revoked || grant.status === 'revoked') {
+    const err = new Error(`Access grant ${grantId} has been revoked`);
+    err.code = 'grant_revoked';
+    throw err;
+  }
+
+  if (!isGrantActive({ expiresAt: grant.expires_at, officerId: grant.officer_id, is_revoked: grant.is_revoked }, officerId)) {
     const err = new Error(`Access grant ${grantId} has expired at ${grant.expires_at}`);
     err.code = 'grant_expired';
     throw err;

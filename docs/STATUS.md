@@ -55,19 +55,35 @@ Phase 6 — Break-glass access and audit  →  **COMPLETE / AGENT-VERIFIED** (ta
 | `npm run test` | 0 | 191 passed (57 frontend, 117 backend, 17 ml) |
 | `npm run test:e2e` | 0 | 21/21 passed |
 | `npm run build` | 0 | All commander, welfare, briefing, break-glass, and internal API routes compile dynamic (ƒ) |
+| `node scripts/verify-phase-6.js` | 0 | 40/40 checks passed; output saved to `tests/results/phase-6-verification-2026-09-30.txt` |
 
 ## Independent Phase 6 verification pass (Guidebook verification prompt)
 Per: "Attempt all of the following: commander request, unrelated officer, missing reason, altered report ID, altered unit ID, expired grant, revoked grant, direct private-table query, and repeated paginated reads. Verify successful reads each produce an audit row, and failures produce no individual data. Review that the audit reason is encrypted at rest and plaintext is not logged. Report any direct unlogged read path."
 
-- **Commander request (T-02)**: Returns 403 Forbidden on grant request, individual read, and audit endpoints. Commander cannot obtain individual data.
-- **Unrelated officer (T-06)**: Returns 404 Not Found (concealment, no existence oracle) on grant request and individual read.
-- **Missing / short reason (T-07)**: Returns 422 Unprocessable Entity when typed reason is empty or <10 characters. No grant created.
-- **Altered report ID / altered unit ID**: Database transactional function verifies `r.unit_id = p_unit_id` and `g.report_id = p_report_id` before reading private rows. Returns 0 rows and logs failure if mismatched.
-- **Expired grant (T-08)**: Returns 403 Forbidden with `{ error: 'grant_expired' }`. Individual access is cut off.
-- **Direct private-table query**: Ordinary client roles (`anon`, `authenticated`) have `SELECT` explicitly revoked on `private.personnel`, `private.access_grants`, `private.access_audit`. Direct table queries fail at the Postgres permission level.
-- **Repeated paginated reads (T-09)**: Clamped to at most 20 records per page. Each individual read produces an immutable per-read audit log entry in `private.access_audit`.
-- **Reason encrypted at rest**: Stored as `v1:<iv>:<tag>:<ciphertext>` using AES-256-GCM. Plaintext is never logged or exposed.
-- **Direct unlogged read path**: None exists. All individual reads flow through `private.execute_audited_break_glass_read`.
+- **Commander request (T-02)**: Returns 403 Forbidden on grant request (`role_not_welfare_officer`), individual read, and audit endpoints. Commander cannot obtain individual data; zero grants or audit records are created.
+- **Unrelated officer (T-06)**: Returns 404 Not Found (`report_not_assigned_to_user` concealment, preventing existence oracle) on grant request and individual read. Domain logic explicitly rejects unassigned officers.
+- **Missing / short / invalid reason (T-07)**:
+  - Empty reason string: rejected (min 10 chars required).
+  - Short reason ("urgent", 6 chars): rejected with 422.
+  - Invalid reason code (`disciplinary_inquiry`): rejected; only permitted codes accepted.
+  - No grant created; grant store remains empty.
+- **Altered report ID**: Authorization gate returns 404 (`report_not_assigned_to_user`). In domain execution, `executeIndividualRead` throws `grant_mismatch`. Database transactional function verifies `r.unit_id = p_unit_id` and `g.report_id = p_report_id`.
+- **Altered unit ID**: Authorization gate returns 403 `unit_mismatch`. Database transactional function strictly verifies `v_grant.unit_id <> v_report.unit_id` and raises an exception.
+- **Expired grant (T-08)**: At 31 minutes post-grant, `isGrantActive` returns `false`. Authorization gate returns 403 Forbidden with `grant_expired`. Database transactional function verifies `v_grant.expires_at <= now()`.
+- **Revoked grant**: Grant flagged with `is_revoked = true` is evaluated as inactive (`isGrantActive` returns `false`). Authorization returns 403 Forbidden with `grant_revoked`. Database transactional function verifies `v_grant.is_revoked = true` and aborts.
+- **Direct private-table query**: Schema `private` privileges explicitly revoked from `public`, `anon`, and `authenticated` roles. Row Level Security enabled on `private.access_grants` and `private.access_audit`. Direct execution of `private.execute_audited_break_glass_read` revoked from client roles and granted exclusively to `service_role`.
+- **Repeated paginated reads (T-09)**:
+  - Page 1 read (limit 10, offset 0): returns 10 records and atomically inserts 1 audit row with `row_count: 10`, `action: 'individual_read'`.
+  - Page 2 read (limit 10, offset 10): returns next 10 records with distinct personnel IDs and appends a 2nd audit row.
+  - Request with limit 100: clamped strictly to maximum 20 records; audit row records clamped count (20).
+  - Failed reads: throw exceptions and return zero individual data.
+- **Reason encrypted at rest & zero plaintext logging**:
+  - Ciphertext matches AES-256-GCM authenticated format `v1:<12-byte IV>:<16-byte Tag>:<Ciphertext>`.
+  - Plaintext reason is 100% absent from stored ciphertext.
+  - Decryption with system key accurately recovers original typed justification.
+  - Bit-flipping tampering triggers cryptographic auth tag verification exception.
+  - Audit log table stores only `reason_code` (`welfare_review`), never plaintext justification.
+- **Direct unlogged read path**: None exists. Audited all route handlers and database routines: exactly one route exists (`/api/welfare/reports/[id]/individuals`), which strictly enforces `executeIndividualRead` and `Cache-Control: no-store`. Database read function atomically records in `private.access_audit` in the same transaction. Audit trail viewer isolates events per officer (Officer B sees 0 events from Officer A).
 
 ## What does NOT work / not implemented yet
 - **Remote hosted Supabase instance not yet connected.** All database logic runs against unit test mocks or degrades gracefully when env vars are unset.

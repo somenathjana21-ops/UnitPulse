@@ -169,6 +169,7 @@ export function validateGrantRequest(request = {}) {
 export function isGrantActive(grant, requestingOfficerId, now = new Date()) {
   if (!grant || !grant.expiresAt || !grant.officerId) return false;
   if (grant.officerId !== requestingOfficerId) return false;
+  if (grant.is_revoked || grant.isRevoked || grant.revoked || grant.status === 'revoked') return false;
   const expiry = new Date(grant.expiresAt).getTime();
   const currentTime = typeof now === 'number' ? now : (now instanceof Date ? now.getTime() : new Date(now).getTime());
   return currentTime < expiry;

@@ -92,7 +92,12 @@ export function resolveBreakGlassReadAccess({ user, report, grantId, grant, now 
     return { allowed: false, httpStatus: 403, reason: 'unit_mismatch' };
   }
 
-  // 5. Enforce 30-minute expiry (T-08)
+  // 5. Enforce grant revocation
+  if (grant.is_revoked || grant.isRevoked || grant.revoked || grant.status === 'revoked') {
+    return { allowed: false, httpStatus: 403, reason: 'grant_revoked' };
+  }
+
+  // 6. Enforce 30-minute expiry (T-08)
   const expiryTime = new Date(grant.expires_at).getTime();
   const currentTime = typeof now === 'number' ? now : (now instanceof Date ? now.getTime() : new Date(now).getTime());
   if (currentTime >= expiryTime) {

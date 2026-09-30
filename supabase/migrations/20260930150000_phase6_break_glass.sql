@@ -17,7 +17,7 @@
 -- 8. Officer audit viewer allows officers to inspect their own access history only.
 -- ==============================================================================
 
--- 1. Align reason code constraints on private.access_grants
+-- 1. Align reason code constraints and columns on private.access_grants
 alter table private.access_grants drop constraint if exists access_grants_reason_code_check;
 alter table private.access_grants add constraint access_grants_reason_code_check
   check (reason_code in (
@@ -27,6 +27,7 @@ alter table private.access_grants add constraint access_grants_reason_code_check
     'leave_rebalancing_assessment',
     'emergency_support'
   ));
+alter table private.access_grants add column if not exists is_revoked boolean not null default false;
 
 -- 2. Transactional Grant Creation Function (Service-Role Only)
 create or replace function private.create_access_grant(
@@ -207,7 +208,11 @@ begin
     raise exception 'Unit mismatch between grant (%) and report (%)', v_grant.unit_id, v_report.unit_id;
   end if;
 
-  -- 3.6 Check grant expiration
+  -- 3.6 Check grant revocation and expiration
+  if v_grant.is_revoked = true then
+    raise exception 'Access grant % has been revoked', p_grant_id;
+  end if;
+
   if v_grant.expires_at <= now() then
     raise exception 'Access grant % has expired at %', p_grant_id, v_grant.expires_at;
   end if;
