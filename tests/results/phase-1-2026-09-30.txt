@@ -116,21 +116,42 @@ ok 5 - Phase 1 — Access Control & Role Permission Boundary Tests
     ok 6 - supabase/seed.sql exists and is populated with valid SQL statements
     1..6
 ok 6 - Phase 1 — Synthetic Seed Dataset Safety Invariants
+# Subtest: Phase 1 — Hostile Penetration & Adversarial Security Scenarios
+    # Subtest: Hostile Scenario 1: PostgREST schema boundary stops direct queries to private raw tables
+    ok 1 - Hostile Scenario 1: PostgREST schema boundary stops direct queries to private raw tables
+    # Subtest: Hostile Scenario 2: Service-role credentials are strictly server-only and not leaked to client
+    ok 2 - Hostile Scenario 2: Service-role credentials are strictly server-only and not leaked to client
+    # Subtest: Hostile Scenario 3: SQL injection or manipulated unit ID in release queries yields zero unauthorized records
+    ok 3 - Hostile Scenario 3: SQL injection or manipulated unit ID in release queries yields zero unauthorized records
+    # Subtest: Hostile Scenario 4: Role self-escalation via client INSERT/UPDATE is blocked
+    ok 4 - Hostile Scenario 4: Role self-escalation via client INSERT/UPDATE is blocked
+    # Subtest: Hostile Scenario 5: Unit assignment self-escalation via client INSERT is blocked
+    ok 5 - Hostile Scenario 5: Unit assignment self-escalation via client INSERT is blocked
+    # Subtest: Hostile Scenario 6: Commander cannot access welfare case notes or reports
+    ok 6 - Hostile Scenario 6: Commander cannot access welfare case notes or reports
+    # Subtest: Hostile Scenario 7: Unassigned welfare officer cannot snoop on another officer case
+    ok 7 - Hostile Scenario 7: Unassigned welfare officer cannot snoop on another officer case
+    # Subtest: Hostile Scenario 8: Direct execution of break-glass read is revoked from client roles
+    ok 8 - Hostile Scenario 8: Direct execution of break-glass read is revoked from client roles
+    # Subtest: Hostile Scenario 9: Zero personal identifiers leaked across all published releases
+    ok 9 - Hostile Scenario 9: Zero personal identifiers leaked across all published releases
+    1..9
+ok 7 - Phase 1 — Hostile Penetration & Adversarial Security Scenarios
 # Subtest: Phase 1 — Live Database / Docker Connection Status
     # Subtest: Evaluates live database status without falsely claiming unrun tests
     ok 1 - Evaluates live database status without falsely claiming unrun tests
     1..1
-ok 7 - Phase 1 — Live Database / Docker Connection Status
+ok 8 - Phase 1 — Live Database / Docker Connection Status
 # Subtest: checkGroupSuppression suppresses groups smaller than MIN_GROUP_SIZE (5)
-ok 8 - checkGroupSuppression suppresses groups smaller than MIN_GROUP_SIZE (5)
+ok 9 - checkGroupSuppression suppresses groups smaller than MIN_GROUP_SIZE (5)
 # Subtest: checkCellSuppression suppresses small cells (<5) and revealing complements
-ok 9 - checkCellSuppression suppresses small cells (<5) and revealing complements
+ok 10 - checkCellSuppression suppresses small cells (<5) and revealing complements
 # Subtest: validatePublicReleasePayload throws error if personal or unreleased fields are present
-ok 10 - validatePublicReleasePayload throws error if personal or unreleased fields are present
-1..10
-# tests 31
-# suites 4
-# pass 31
+ok 11 - validatePublicReleasePayload throws error if personal or unreleased fields are present
+1..11
+# tests 40
+# suites 5
+# pass 40
 # fail 0
 # cancelled 0
 # skipped 0

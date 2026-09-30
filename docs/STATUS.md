@@ -16,9 +16,9 @@ Phase 2 — Metrics, index, baseline, and privacy release  →  **PENDING IMPLEM
 
 ## What works right now
 - `npm run lint` succeeds across all workspaces (`eslint` on frontend; custom zero-secret linters on backend and ml).
-- `npm run test` succeeds with 42 passed tests:
+- `npm run test` succeeds with 51 passed tests:
   - 2 frontend workspace import and wiring tests.
-  - 31 backend tests (schema/RLS static audit, access control simulations, anonymous/commander permission boundaries, privacy suppression, and welfare lifecycle transitions).
+  - 40 backend tests (schema/RLS static audit, access control simulations, anonymous/commander permission boundaries, 9 hostile penetration scenarios, privacy suppression, and welfare lifecycle transitions).
   - 9 ml tests (deterministic scoring, rolling baseline, trigger evaluation, and normalization).
 - `npm run test:e2e` passes 11/11 automated security, architectural, and Phase 1 migration/seed assertions.
 - `npm run build` succeeds (Next.js 14 App Router statically exports `/`, `/_not-found`, and `/login`).

@@ -344,6 +344,140 @@ describe('Phase 1 — Synthetic Seed Dataset Safety Invariants', () => {
   });
 });
 
+describe('Phase 1 — Hostile Penetration & Adversarial Security Scenarios', () => {
+  const commanderAlpha = DEMO_USERS.find((u) => u.email.includes('commander.alpha'));
+  const commanderBravo = DEMO_USERS.find((u) => u.email.includes('commander.bravo'));
+  const welfarePrimary = DEMO_USERS.find((u) => u.email.includes('welfare.primary'));
+  const welfareSecondary = DEMO_USERS.find((u) => u.email.includes('welfare.secondary'));
+
+  const reportBravo = {
+    id: '11111111-2222-3333-4444-555555555555',
+    unit_id: 'UNIT-B',
+    assigned_to: welfarePrimary.id,
+  };
+
+  it('Hostile Scenario 1: PostgREST schema boundary stops direct queries to private raw tables', () => {
+    // Both anonymous and commander users attempt to query raw tables
+    const anonPersonnel = canDirectlyQueryPrivateRawTables({ user: null });
+    assert.equal(anonPersonnel.allowed, false);
+    assert.equal(anonPersonnel.reason, 'unauthenticated_anonymous');
+
+    const commanderPersonnel = canDirectlyQueryPrivateRawTables({
+      user: { id: commanderAlpha.id, role: 'commander' },
+    });
+    assert.equal(commanderPersonnel.allowed, false);
+    assert.equal(commanderPersonnel.reason, 'role_commander_cannot_query_private_schema');
+  });
+
+  it('Hostile Scenario 2: Service-role credentials are strictly server-only and not leaked to client', () => {
+    // Scan frontend source directory for any accidental reference to service_role key
+    const frontendDir = path.join(rootDir, 'frontend', 'src');
+    function scanDir(dir) {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          scanDir(fullPath);
+        } else if (entry.isFile() && /\.(js|jsx|ts|tsx)$/.test(entry.name)) {
+          const content = fs.readFileSync(fullPath, 'utf8');
+          assert.ok(
+            !content.includes('SUPABASE_SERVICE_ROLE_KEY'),
+            `Forbidden service_role key reference detected in client file: ${entry.name}`
+          );
+          assert.ok(
+            !content.includes('process.env.SUPABASE_SERVICE_ROLE_KEY'),
+            `Forbidden process.env.SUPABASE_SERVICE_ROLE_KEY in client file: ${entry.name}`
+          );
+        }
+      }
+    }
+    scanDir(frontendDir);
+  });
+
+  it('Hostile Scenario 3: SQL injection or manipulated unit ID in release queries yields zero unauthorized records', () => {
+    const maliciousUnitIds = [
+      'UNIT-B',
+      "UNIT-A' OR '1'='1",
+      '../UNIT-B',
+      "UNIT-A'; DROP TABLE private.units; --",
+      '*',
+    ];
+
+    for (const targetId of maliciousUnitIds) {
+      const check = canReadUnitRelease({
+        user: {
+          id: commanderAlpha.id,
+          role: 'commander',
+          assignedUnitIds: ['UNIT-A'], // Alpha is only assigned to UNIT-A
+        },
+        unitId: targetId,
+      });
+      assert.equal(check.allowed, false, `Access must be denied for tampered unitId: ${targetId}`);
+    }
+  });
+
+  it('Hostile Scenario 4: Role self-escalation via client INSERT/UPDATE is blocked', () => {
+    // Attempt to escalate role from commander to welfare_officer
+    const escalationAttempt = canMutateUserRoles({
+      user: { id: commanderAlpha.id, role: 'commander' },
+      desiredRole: 'welfare_officer',
+    });
+    assert.equal(escalationAttempt.allowed, false);
+    assert.equal(escalationAttempt.reason, 'user_roles_client_mutations_forbidden');
+  });
+
+  it('Hostile Scenario 5: Unit assignment self-escalation via client INSERT is blocked', () => {
+    // Attempt to self-assign UNIT-B
+    const assignmentAttempt = canMutateUnitAssignments({
+      user: { id: commanderAlpha.id, role: 'commander' },
+      targetUnitId: 'UNIT-B',
+    });
+    assert.equal(assignmentAttempt.allowed, false);
+    assert.equal(assignmentAttempt.reason, 'unit_assignments_client_mutations_forbidden');
+  });
+
+  it('Hostile Scenario 6: Commander cannot access welfare case notes or reports', () => {
+    const accessAttempt = canAccessWelfareReport({
+      user: { id: commanderAlpha.id, role: 'commander' },
+      report: reportBravo,
+    });
+    assert.equal(accessAttempt.allowed, false);
+    assert.equal(accessAttempt.reason, 'role_not_welfare_officer');
+  });
+
+  it('Hostile Scenario 7: Unassigned welfare officer cannot snoop on another officer case', () => {
+    const snoopingAttempt = canAccessWelfareReport({
+      user: { id: welfareSecondary.id, role: 'welfare_officer' },
+      report: reportBravo, // assigned to welfarePrimary
+    });
+    assert.equal(snoopingAttempt.allowed, false);
+    assert.equal(snoopingAttempt.reason, 'report_not_assigned_to_user');
+  });
+
+  it('Hostile Scenario 8: Direct execution of break-glass read is revoked from client roles', () => {
+    const sql = fs.readFileSync(migrationPath, 'utf8');
+    assert.ok(
+      sql.includes('revoke all on function private.execute_audited_break_glass_read'),
+      'Direct execution of break-glass function must be explicitly revoked from public/anon/authenticated'
+    );
+    assert.ok(
+      sql.includes('grant execute on function private.execute_audited_break_glass_read(uuid, uuid, uuid, integer, integer) to service_role;'),
+      'Break-glass function execution must be restricted to service_role'
+    );
+  });
+
+  it('Hostile Scenario 9: Zero personal identifiers leaked across all published releases', () => {
+    const data = generateSyntheticDataset();
+    for (const release of data.unitWeekReleases) {
+      assert.equal(release.personnel_id, undefined);
+      assert.equal(release.person_id, undefined);
+      assert.equal(release.name, undefined);
+      const str = JSON.stringify(release);
+      assert.ok(!str.includes('PER-'), 'No personnel ID pattern PER- in release JSON');
+    }
+  });
+});
+
 describe('Phase 1 — Live Database / Docker Connection Status', () => {
   it('Evaluates live database status without falsely claiming unrun tests', () => {
     const hasLiveDbEnv = !!process.env.DATABASE_URL || !!process.env.SUPABASE_DB_URL;
