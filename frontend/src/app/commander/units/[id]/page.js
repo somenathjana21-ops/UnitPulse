@@ -61,21 +61,36 @@ export default async function UnitDetailPage({ params }) {
         &larr; Back to your units
       </Link>
 
-      <div className="section-header">
-        <h1 className="section-title">
-          {unitId}
-          {card.bandLabel && (
-            <span
-              className={`status-pill ${card.bandLabel === 'Elevated' ? 'status-elevated' : card.bandLabel === 'Review' ? 'status-pending' : 'status-ready'}`}
-              style={{ marginLeft: '0.75rem', verticalAlign: 'middle' }}
+      <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <h1 className="section-title">
+            {unitId}
+            {card.bandLabel && (
+              <span
+                className={`status-pill ${card.bandLabel === 'Elevated' ? 'status-elevated' : card.bandLabel === 'Review' ? 'status-pending' : 'status-ready'}`}
+                style={{ marginLeft: '0.75rem', verticalAlign: 'middle' }}
+              >
+                {card.bandLabel}
+              </span>
+            )}
+          </h1>
+          <p className="section-subtitle">
+            Approved aggregate detail for the most recent completed week. Possible contributing conditions, never a diagnosis.
+          </p>
+        </div>
+        {latest?.week_start && (
+          <div>
+            <a
+              href={`/api/briefings/${unitId}/print?week=${latest.week_start}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary"
+              style={{ fontSize: '0.85rem' }}
             >
-              {card.bandLabel}
-            </span>
-          )}
-        </h1>
-        <p className="section-subtitle">
-          Approved aggregate detail for the most recent completed week. Possible contributing conditions, never a diagnosis.
-        </p>
+              🖨️ Print Aggregate Briefing (PDF)
+            </a>
+          </div>
+        )}
       </div>
 
       {card.isWithheld || !card.hasData ? (

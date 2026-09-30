@@ -22,5 +22,6 @@ export const config = {
     '/welfare/:path*',
     '/api/welfare/:path*',
     '/api/internal/:path*',
+    '/api/briefings/:path*',
   ],
 };

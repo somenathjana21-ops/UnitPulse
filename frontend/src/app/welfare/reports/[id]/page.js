@@ -99,6 +99,17 @@ export default async function WelfareReportDetailPage({ params }) {
               Follow-Up Scheduled: {report.followUpOn}
             </div>
           )}
+          <div style={{ marginTop: '0.5rem' }}>
+            <a
+              href={`/api/briefings/${report.unitId}/print?week=${report.weekStart}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary"
+              style={{ fontSize: '0.8rem', padding: '4px 10px', display: 'inline-block' }}
+            >
+              🖨️ Print Briefing (PDF)
+            </a>
+          </div>
         </div>
       </div>
 

@@ -1,0 +1,1081 @@
+﻿
+> unitpulse@0.1.0 test
+> npm run test --workspaces --if-present
+
+
+> @unitpulse/frontend@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: Phase 5 ΓÇö Briefings Route Authorization & Privacy Scoping
+    # Subtest: Rejects unauthenticated requests with 401
+    ok 1 - Rejects unauthenticated requests with 401
+      ---
+      duration_ms: 1.3098
+      ...
+    # Subtest: Conceals unassigned units with 404 (no confirmation of unit existence)
+    ok 2 - Conceals unassigned units with 404 (no confirmation of unit existence)
+      ---
+      duration_ms: 0.2687
+      ...
+    # Subtest: Allows assigned commander to access aggregate briefing for their unit
+    ok 3 - Allows assigned commander to access aggregate briefing for their unit
+      ---
+      duration_ms: 0.2179
+      ...
+    # Subtest: Allows assigned welfare officer to access aggregate briefing for their unit
+    ok 4 - Allows assigned welfare officer to access aggregate briefing for their unit
+      ---
+      duration_ms: 0.2955
+      ...
+    1..4
+ok 1 - Phase 5 ΓÇö Briefings Route Authorization & Privacy Scoping
+  ---
+  duration_ms: 3.8758
+  type: 'suite'
+  ...
+# Subtest: Phase 5 ΓÇö Briefings Repository & Stored Aggregate Output
+    # Subtest: fetchUnitReleaseWithBriefing returns stored briefing or generates validated fallback
+    ok 1 - fetchUnitReleaseWithBriefing returns stored briefing or generates validated fallback
+      ---
+      duration_ms: 0.8144
+      ...
+    # Subtest: Zero personnel data invariant in briefing payload
+    ok 2 - Zero personnel data invariant in briefing payload
+      ---
+      duration_ms: 0.2778
+      ...
+    1..2
+ok 2 - Phase 5 ΓÇö Briefings Repository & Stored Aggregate Output
+  ---
+  duration_ms: 1.3382
+  type: 'suite'
+  ...
+# Subtest: resolveCommanderUnitAccess: no session -> 401
+ok 3 - resolveCommanderUnitAccess: no session -> 401
+  ---
+  duration_ms: 1.7177
+  ...
+# Subtest: resolveCommanderUnitAccess: own assigned unit -> allowed
+ok 4 - resolveCommanderUnitAccess: own assigned unit -> allowed
+  ---
+  duration_ms: 0.5613
+  ...
+# Subtest: resolveCommanderUnitAccess: guessed URL for another unit -> 404, never 403
+ok 5 - resolveCommanderUnitAccess: guessed URL for another unit -> 404, never 403
+  ---
+  duration_ms: 0.2708
+  ...
+# Subtest: resolveCommanderUnitAccess: a completely fabricated unit ID -> also 404, same shape as a real denied unit
+ok 6 - resolveCommanderUnitAccess: a completely fabricated unit ID -> also 404, same shape as a real denied unit
+  ---
+  duration_ms: 1.2187
+  ...
+# Subtest: resolveCommanderUnitAccess: hr_uploader role cannot read unit releases
+ok 7 - resolveCommanderUnitAccess: hr_uploader role cannot read unit releases
+  ---
+  duration_ms: 0.2586
+  ...
+# Subtest: fetchUserContext returns null for no session
+ok 8 - fetchUserContext returns null for no session
+  ---
+  duration_ms: 2.071
+  ...
+# Subtest: fetchUserContext resolves role and assigned units for a real session
+ok 9 - fetchUserContext resolves role and assigned units for a real session
+  ---
+  duration_ms: 1.5247
+  ...
+# Subtest: fetchLatestReleasesForUnits never queries or returns units outside the requested list
+ok 10 - fetchLatestReleasesForUnits never queries or returns units outside the requested list
+  ---
+  duration_ms: 0.7057
+  ...
+# Subtest: fetchLatestReleasesForUnits returns [] for an empty unit list without querying
+ok 11 - fetchLatestReleasesForUnits returns [] for an empty unit list without querying
+  ---
+  duration_ms: 0.379
+  ...
+# Subtest: fetchReleaseHistory returns rows oldest-first for charting, scoped to one unit
+ok 12 - fetchReleaseHistory returns rows oldest-first for charting, scoped to one unit
+  ---
+  duration_ms: 0.4786
+  ...
+# Subtest: mapBandToDisplayLabel follows docs/04's UI vocabulary, not the DB vocabulary
+ok 13 - mapBandToDisplayLabel follows docs/04's UI vocabulary, not the DB vocabulary
+  ---
+  duration_ms: 1.8929
+  ...
+# Subtest: buildUnitCardViewModel: no release yet
+ok 14 - buildUnitCardViewModel: no release yet
+  ---
+  duration_ms: 0.2443
+  ...
+# Subtest: buildUnitCardViewModel: suppressed small group shows no figures, only the docs/04 message
+ok 15 - buildUnitCardViewModel: suppressed small group shows no figures, only the docs/04 message
+  ---
+  duration_ms: 0.2731
+  ...
+# Subtest: buildUnitCardViewModel: insufficient coverage shows "not enough verified data", never a zero
+ok 16 - buildUnitCardViewModel: insufficient coverage shows "not enough verified data", never a zero
+  ---
+  duration_ms: 0.2192
+  ...
+# Subtest: buildUnitCardViewModel: published week shows the index and mapped band label
+ok 17 - buildUnitCardViewModel: published week shows the index and mapped band label
+  ---
+  duration_ms: 0.269
+  ...
+# Subtest: buildTrendSeriesViewModel nulls out withheld weeks but keeps the week present in the series
+ok 18 - buildTrendSeriesViewModel nulls out withheld weeks but keeps the week present in the series
+  ---
+  duration_ms: 0.2657
+  ...
+# Subtest: buildEvidenceCards only surfaces fields actually present in approved_metrics_json
+ok 19 - buildEvidenceCards only surfaces fields actually present in approved_metrics_json
+  ---
+  duration_ms: 0.338
+  ...
+# Subtest: buildEvidenceCards returns nothing for a suppressed release
+ok 20 - buildEvidenceCards returns nothing for a suppressed release
+  ---
+  duration_ms: 0.7852
+  ...
+# Subtest: buildSuggestedActions uses only permitted categories and "consider/review" framing
+ok 21 - buildSuggestedActions uses only permitted categories and "consider/review" framing
+  ---
+  duration_ms: 0.7396
+  ...
+# Subtest: buildSuggestedActions falls back to verify_data for a non-published release
+ok 22 - buildSuggestedActions falls back to verify_data for a non-published release
+  ---
+  duration_ms: 0.3083
+  ...
+# Subtest: buildApiUnitPayload matches the docs/08 response shape and passes the privacy field validator
+ok 23 - buildApiUnitPayload matches the docs/08 response shape and passes the privacy field validator
+  ---
+  duration_ms: 1.6508
+  ...
+# Subtest: buildApiUnitPayload never leaks an unexpected field even if the source row has one
+ok 24 - buildApiUnitPayload never leaks an unexpected field even if the source row has one
+  ---
+  duration_ms: 0.3473
+  ...
+# Subtest: buildApiUnitPayload for a suppressed unit exposes zero figures and empty metrics
+ok 25 - buildApiUnitPayload for a suppressed unit exposes zero figures and empty metrics
+  ---
+  duration_ms: 0.2894
+  ...
+# Subtest: frontend successfully resolves and invokes @unitpulse/backend exports
+ok 26 - frontend successfully resolves and invokes @unitpulse/backend exports
+  ---
+  duration_ms: 2.222
+  ...
+# Subtest: frontend successfully resolves and invokes @unitpulse/ml exports
+ok 27 - frontend successfully resolves and invokes @unitpulse/ml exports
+  ---
+  duration_ms: 0.8549
+  ...
+# Subtest: Phase 4 ΓÇö Welfare Authorization (resolveWelfareReportAccess)
+    # Subtest: Resolves 401 for anonymous / unauthenticated user
+    ok 1 - Resolves 401 for anonymous / unauthenticated user
+      ---
+      duration_ms: 1.1724
+      ...
+    # Subtest: Resolves 403 for user with commander role
+    ok 2 - Resolves 403 for user with commander role
+      ---
+      duration_ms: 0.3694
+      ...
+    # Subtest: Resolves 404 for missing report (does not leak existence)
+    ok 3 - Resolves 404 for missing report (does not leak existence)
+      ---
+      duration_ms: 0.2671
+      ...
+    # Subtest: Resolves 404 for report assigned to a different welfare officer (no existence oracle)
+    ok 4 - Resolves 404 for report assigned to a different welfare officer (no existence oracle)
+      ---
+      duration_ms: 0.2359
+      ...
+    # Subtest: Resolves 200 for assigned welfare officer
+    ok 5 - Resolves 200 for assigned welfare officer
+      ---
+      duration_ms: 0.186
+      ...
+    1..5
+ok 28 - Phase 4 ΓÇö Welfare Authorization (resolveWelfareReportAccess)
+  ---
+  duration_ms: 4.0828
+  type: 'suite'
+  ...
+# Subtest: Phase 4 ΓÇö Welfare Repository (fetchAssignedReports & fetchReportById)
+    # Subtest: fetchAssignedReports returns ONLY reports assigned to the requested officer
+    ok 1 - fetchAssignedReports returns ONLY reports assigned to the requested officer
+      ---
+      duration_ms: 3.2978
+      ...
+    # Subtest: fetchAssignedReports returns empty list when officer has no reports
+    ok 2 - fetchAssignedReports returns empty list when officer has no reports
+      ---
+      duration_ms: 0.2469
+      ...
+    # Subtest: fetchReportById returns report when assigned to requesting officer
+    ok 3 - fetchReportById returns report when assigned to requesting officer
+      ---
+      duration_ms: 0.3923
+      ...
+    # Subtest: fetchReportById returns null when report belongs to another officer
+    ok 4 - fetchReportById returns null when report belongs to another officer
+      ---
+      duration_ms: 0.2002
+      ...
+    # Subtest: updateReportWorkflow updates report status successfully
+    ok 5 - updateReportWorkflow updates report status successfully
+      ---
+      duration_ms: 0.4532
+      ...
+    1..5
+ok 29 - Phase 4 ΓÇö Welfare Repository (fetchAssignedReports & fetchReportById)
+  ---
+  duration_ms: 6.5363
+  type: 'suite'
+  ...
+# Subtest: Phase 4 ΓÇö Welfare View Models & In-App Notifications
+    # Subtest: buildReportInboxViewModel correctly aggregates counts and flags overdue cases
+    ok 1 - buildReportInboxViewModel correctly aggregates counts and flags overdue cases
+      ---
+      duration_ms: 1.0076
+      ...
+    # Subtest: buildReportInboxViewModel generates in-app notification banners without email leakage
+    ok 2 - buildReportInboxViewModel generates in-app notification banners without email leakage
+      ---
+      duration_ms: 0.2321
+      ...
+    # Subtest: buildReportDetailViewModel provides valid status progression and safety disclaimer
+    ok 3 - buildReportDetailViewModel provides valid status progression and safety disclaimer
+      ---
+      duration_ms: 1.0544
+      ...
+    # Subtest: buildReportDetailViewModel for action_taken allows follow_up or closed
+    ok 4 - buildReportDetailViewModel for action_taken allows follow_up or closed
+      ---
+      duration_ms: 0.2528
+      ...
+    1..4
+ok 30 - Phase 4 ΓÇö Welfare View Models & In-App Notifications
+  ---
+  duration_ms: 3.8437
+  type: 'suite'
+  ...
+1..30
+# tests 45
+# suites 5
+# pass 45
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 168.58
+
+> @unitpulse/backend@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: Phase 5 ΓÇö AI Adapter: Deterministic Safe Fallbacks
+    # Subtest: NO_LLM_MODE=true produces deterministic aggregate briefing without network calls
+    ok 1 - NO_LLM_MODE=true produces deterministic aggregate briefing without network calls
+      ---
+      duration_ms: 2.1637
+      ...
+    # Subtest: Missing AI_API_KEY defaults immediately to deterministic fallback
+    ok 2 - Missing AI_API_KEY defaults immediately to deterministic fallback
+      ---
+      duration_ms: 0.2185
+      ...
+    # Subtest: Always includes mandatory non-diagnostic disclaimer in both model and deterministic outputs
+    ok 3 - Always includes mandatory non-diagnostic disclaimer in both model and deterministic outputs
+      ---
+      duration_ms: 0.1795
+      ...
+    # Subtest: Deterministic suggested actions only use allowed categories
+    ok 4 - Deterministic suggested actions only use allowed categories
+      ---
+      duration_ms: 0.1437
+      ...
+    1..4
+ok 1 - Phase 5 ΓÇö AI Adapter: Deterministic Safe Fallbacks
+  ---
+  duration_ms: 3.8157
+  type: 'suite'
+  ...
+# Subtest: Phase 5 ΓÇö AI Adapter: Adversarial and Safety Rejections
+    # Subtest: Rejects invalid JSON and falls back to deterministic briefing
+    ok 1 - Rejects invalid JSON and falls back to deterministic briefing
+      ---
+      duration_ms: 3.2623
+      ...
+    # Subtest: Rejects clinical diagnosis words (e.g. depressed, burnout, PTSD) and falls back
+    ok 2 - Rejects clinical diagnosis words (e.g. depressed, burnout, PTSD) and falls back
+      ---
+      duration_ms: 0.8229
+      ...
+    # Subtest: Rejects punitive or disciplinary recommendations and falls back
+    ok 3 - Rejects punitive or disciplinary recommendations and falls back
+      ---
+      duration_ms: 1.6514
+      ...
+    # Subtest: Rejects definite causal claims (e.g. "caused by", "causes") and falls back
+    ok 4 - Rejects definite causal claims (e.g. "caused by", "causes") and falls back
+      ---
+      duration_ms: 1.5097
+      ...
+    # Subtest: Rejects invented percentages and metrics not present in approved snapshot
+    ok 5 - Rejects invented percentages and metrics not present in approved snapshot
+      ---
+      duration_ms: 1.252
+      ...
+    # Subtest: Rejects unapproved evidence keys not in allow-list
+    ok 6 - Rejects unapproved evidence keys not in allow-list
+      ---
+      duration_ms: 0.3328
+      ...
+    # Subtest: Rejects unapproved action categories
+    ok 7 - Rejects unapproved action categories
+      ---
+      duration_ms: 0.4522
+      ...
+    1..7
+ok 2 - Phase 5 ΓÇö AI Adapter: Adversarial and Safety Rejections
+  ---
+  duration_ms: 9.9525
+  type: 'suite'
+  ...
+# [AI Adapter] Transient error 429. Attempting bounded retry (1 of 1)...
+# Subtest: Phase 5 ΓÇö AI Adapter: Provider Outage and Capability Handling
+    # Subtest: Handles provider timeout via AbortController and falls back safely
+    ok 1 - Handles provider timeout via AbortController and falls back safely
+      ---
+      duration_ms: 156.8847
+      ...
+# [AI Adapter] Transient error 500. Attempting bounded retry (1 of 1)...
+    # Subtest: Handles HTTP 429 Too Many Requests with bounded retry and falls back
+    ok 2 - Handles HTTP 429 Too Many Requests with bounded retry and falls back
+      ---
+      duration_ms: 301.1393
+      ...
+# [AI Adapter] Provider rejected response_format: json_object. Retrying without response_format.
+    # Subtest: Handles HTTP 500 Internal Server Error with bounded retry and falls back
+    ok 3 - Handles HTTP 500 Internal Server Error with bounded retry and falls back
+      ---
+      duration_ms: 310.103
+      ...
+    # Subtest: Handles capability difference: provider rejecting response_format json_object with 400
+    ok 4 - Handles capability difference: provider rejecting response_format json_object with 400
+      ---
+      duration_ms: 0.9274
+      ...
+    1..4
+ok 3 - Phase 5 ΓÇö AI Adapter: Provider Outage and Capability Handling
+  ---
+  duration_ms: 769.4439
+  type: 'suite'
+  ...
+# Subtest: Phase 5 ΓÇö AI Adapter: Privacy Safety & Server-Side Assembly
+    # Subtest: assertOutboundPayloadSafety throws if personnel ID is included in payload
+    ok 1 - assertOutboundPayloadSafety throws if personnel ID is included in payload
+      ---
+      duration_ms: 0.4257
+      ...
+    # Subtest: assertOutboundPayloadSafety throws if raw roster, location, or notes are in payload
+    ok 2 - assertOutboundPayloadSafety throws if raw roster, location, or notes are in payload
+      ---
+      duration_ms: 0.2687
+      ...
+    # Subtest: buildOutboundPrompt builds messages containing ONLY released aggregate data
+    ok 3 - buildOutboundPrompt builds messages containing ONLY released aggregate data
+      ---
+      duration_ms: 0.4647
+      ...
+    # Subtest: Assembles final displayed numbers server-side from approved values
+    ok 4 - Assembles final displayed numbers server-side from approved values
+      ---
+      duration_ms: 0.1761
+      ...
+    # Subtest: Provider switching requires no UI or score-code change
+    ok 5 - Provider switching requires no UI or score-code change
+      ---
+      duration_ms: 0.2533
+      ...
+    # Subtest: Zero-Secret Invariant: AI_API_KEY is never leaked in errors, logs, or briefing payloads
+    ok 6 - Zero-Secret Invariant: AI_API_KEY is never leaked in errors, logs, or briefing payloads
+      ---
+      duration_ms: 0.5311
+      ...
+    1..6
+ok 4 - Phase 5 ΓÇö AI Adapter: Privacy Safety & Server-Side Assembly
+  ---
+  duration_ms: 2.3481
+  type: 'suite'
+  ...
+# Subtest: validateEnvironmentSecurity rejects forbidden client prefixes on server secrets
+ok 5 - validateEnvironmentSecurity rejects forbidden client prefixes on server secrets
+  ---
+  duration_ms: 2.4494
+  ...
+# Subtest: validateGrantRequest verifies assigned officer and required reason length
+ok 6 - validateGrantRequest verifies assigned officer and required reason length
+  ---
+  duration_ms: 1.4878
+  ...
+# Subtest: validateStatusTransition enforces valid welfare lifecycle state transitions
+ok 7 - validateStatusTransition enforces valid welfare lifecycle state transitions
+  ---
+  duration_ms: 0.4101
+  ...
+# Subtest: computeWeeklySourceMetrics computes leave utilization, recovery gap, and denial rate from raw records
+ok 8 - computeWeeklySourceMetrics computes leave utilization, recovery gap, and denial rate from raw records
+  ---
+  duration_ms: 5.3329
+  ...
+# Subtest: computeWeeklySourceMetrics excludes unverified/missing records instead of assuming zero
+ok 9 - computeWeeklySourceMetrics excludes unverified/missing records instead of assuming zero
+  ---
+  duration_ms: 0.5165
+  ...
+# Subtest: computeWeeklySourceMetrics reports insufficient_data when domain coverage drops below 80%
+ok 10 - computeWeeklySourceMetrics reports insufficient_data when domain coverage drops below 80%
+  ---
+  duration_ms: 0.5874
+  ...
+# Subtest: computeWeeklySourceMetrics respects the 28-day night-duty and 7-day workload window boundaries
+ok 11 - computeWeeklySourceMetrics respects the 28-day night-duty and 7-day workload window boundaries
+  ---
+  duration_ms: 0.3592
+  ...
+# Subtest: computeWeeklySourceMetrics treats verified non-deployed personnel as a confirmed zero, not missing
+ok 12 - computeWeeklySourceMetrics treats verified non-deployed personnel as a confirmed zero, not missing
+  ---
+  duration_ms: 0.3319
+  ...
+# Subtest: computeWeeklySourceMetrics reports leave utilization as unavailable (null), not zero, when eligible days is zero
+ok 13 - computeWeeklySourceMetrics reports leave utilization as unavailable (null), not zero, when eligible days is zero
+  ---
+  duration_ms: 0.5334
+  ...
+# Subtest: computeWeeklySourceMetrics excludes personnel with unverified enrollment from deployment coverage
+ok 14 - computeWeeklySourceMetrics excludes personnel with unverified enrollment from deployment coverage
+  ---
+  duration_ms: 0.3817
+  ...
+#   [STATUS: NOT RUN] Live Postgres execution skipped (No local Docker or remote DB configured).
+# Subtest: Phase 1 ΓÇö SQL Migration Security & Architectural Invariants
+    # Subtest: Migration file exists and defines private and public schemas
+    ok 1 - Migration file exists and defines private and public schemas
+      ---
+      duration_ms: 2.1834
+      ...
+    # Subtest: All raw operational source tables are placed strictly in private schema
+    ok 2 - All raw operational source tables are placed strictly in private schema
+      ---
+      duration_ms: 0.6637
+      ...
+    # Subtest: Row Level Security is enabled on every client-facing table
+    ok 3 - Row Level Security is enabled on every client-facing table
+      ---
+      duration_ms: 0.9529
+      ...
+    # Subtest: Does NOT attempt to put Row Level Security on a materialized view
+    ok 4 - Does NOT attempt to put Row Level Security on a materialized view
+      ---
+      duration_ms: 0.5873
+      ...
+    # Subtest: Enforces partial unique index for at most one active welfare report per unit
+    ok 5 - Enforces partial unique index for at most one active welfare report per unit
+      ---
+      duration_ms: 0.4118
+      ...
+    # Subtest: Provides narrow role provisioning restricted to service_role
+    ok 6 - Provides narrow role provisioning restricted to service_role
+      ---
+      duration_ms: 0.3968
+      ...
+    1..6
+ok 15 - Phase 1 ΓÇö SQL Migration Security & Architectural Invariants
+  ---
+  duration_ms: 7.4037
+  type: 'suite'
+  ...
+# Subtest: Phase 1 ΓÇö Access Control & Role Permission Boundary Tests
+    # Subtest: Anonymous user cannot query private raw personnel tables
+    ok 1 - Anonymous user cannot query private raw personnel tables
+      ---
+      duration_ms: 0.3965
+      ...
+    # Subtest: Anonymous user cannot read public unit_week_releases
+    ok 2 - Anonymous user cannot read public unit_week_releases
+      ---
+      duration_ms: 0.1972
+      ...
+    # Subtest: Anonymous user cannot read public welfare_reports
+    ok 3 - Anonymous user cannot read public welfare_reports
+      ---
+      duration_ms: 0.1817
+      ...
+    # Subtest: Anonymous user cannot mutate user_roles
+    ok 4 - Anonymous user cannot mutate user_roles
+      ---
+      duration_ms: 0.309
+      ...
+    # Subtest: Commander Alpha CAN read public releases for their assigned unit (UNIT-A)
+    ok 5 - Commander Alpha CAN read public releases for their assigned unit (UNIT-A)
+      ---
+      duration_ms: 0.113
+      ...
+    # Subtest: Commander Alpha CANNOT read public releases for another unit (UNIT-B)
+    ok 6 - Commander Alpha CANNOT read public releases for another unit (UNIT-B)
+      ---
+      duration_ms: 0.1465
+      ...
+    # Subtest: Commander Alpha CANNOT directly query private raw personnel tables
+    ok 7 - Commander Alpha CANNOT directly query private raw personnel tables
+      ---
+      duration_ms: 0.1007
+      ...
+    # Subtest: Commander Alpha CANNOT access confidential welfare reports
+    ok 8 - Commander Alpha CANNOT access confidential welfare reports
+      ---
+      duration_ms: 0.2187
+      ...
+    # Subtest: Commander Alpha CANNOT modify user_roles (self-role elevation blocked)
+    ok 9 - Commander Alpha CANNOT modify user_roles (self-role elevation blocked)
+      ---
+      duration_ms: 0.1062
+      ...
+    # Subtest: Commander Alpha CANNOT modify unit_assignments (self-unit assignment blocked)
+    ok 10 - Commander Alpha CANNOT modify unit_assignments (self-unit assignment blocked)
+      ---
+      duration_ms: 0.1044
+      ...
+    # Subtest: Welfare Officer Primary CAN access report assigned to them
+    ok 11 - Welfare Officer Primary CAN access report assigned to them
+      ---
+      duration_ms: 0.0882
+      ...
+    # Subtest: Welfare Officer Secondary CANNOT access report assigned to Officer Primary
+    ok 12 - Welfare Officer Secondary CANNOT access report assigned to Officer Primary
+      ---
+      duration_ms: 0.1923
+      ...
+    1..12
+ok 16 - Phase 1 ΓÇö Access Control & Role Permission Boundary Tests
+  ---
+  duration_ms: 2.7635
+  type: 'suite'
+  ...
+# Subtest: Phase 1 ΓÇö Synthetic Seed Dataset Safety Invariants
+    # Subtest: Generates exactly 6 fictional units with synthetic naming
+    ok 1 - Generates exactly 6 fictional units with synthetic naming
+      ---
+      duration_ms: 0.329
+      ...
+    # Subtest: Generates exactly 60 synthetic personnel per unit (360 total) with pseudonyms only
+    ok 2 - Generates exactly 60 synthetic personnel per unit (360 total) with pseudonyms only
+      ---
+      duration_ms: 0.4221
+      ...
+    # Subtest: Contains approximately 180 days of history and 12 usable completed snapshots
+    ok 3 - Contains approximately 180 days of history and 12 usable completed snapshots
+      ---
+      duration_ms: 0.0862
+      ...
+    # Subtest: Includes exactly one elevated unit (UNIT-B) and one stable unit (UNIT-A)
+    ok 4 - Includes exactly one elevated unit (UNIT-B) and one stable unit (UNIT-A)
+      ---
+      duration_ms: 0.1668
+      ...
+    # Subtest: Public releases contain ZERO personal identifiers
+    ok 5 - Public releases contain ZERO personal identifiers
+      ---
+      duration_ms: 0.2954
+      ...
+    # Subtest: supabase/seed.sql exists and is populated with valid SQL statements
+    ok 6 - supabase/seed.sql exists and is populated with valid SQL statements
+      ---
+      duration_ms: 8.7901
+      ...
+    1..6
+ok 17 - Phase 1 ΓÇö Synthetic Seed Dataset Safety Invariants
+  ---
+  duration_ms: 10.3592
+  type: 'suite'
+  ...
+# Subtest: Phase 1 ΓÇö Hostile Penetration & Adversarial Security Scenarios
+    # Subtest: Hostile Scenario 1: PostgREST schema boundary stops direct queries to private raw tables
+    ok 1 - Hostile Scenario 1: PostgREST schema boundary stops direct queries to private raw tables
+      ---
+      duration_ms: 0.2277
+      ...
+    # Subtest: Hostile Scenario 2: Service-role credentials are strictly server-only and not leaked to client
+    ok 2 - Hostile Scenario 2: Service-role credentials are strictly server-only and not leaked to client
+      ---
+      duration_ms: 6.1364
+      ...
+    # Subtest: Hostile Scenario 3: SQL injection or manipulated unit ID in release queries yields zero unauthorized records
+    ok 3 - Hostile Scenario 3: SQL injection or manipulated unit ID in release queries yields zero unauthorized records
+      ---
+      duration_ms: 0.2312
+      ...
+    # Subtest: Hostile Scenario 4: Role self-escalation via client INSERT/UPDATE is blocked
+    ok 4 - Hostile Scenario 4: Role self-escalation via client INSERT/UPDATE is blocked
+      ---
+      duration_ms: 0.095
+      ...
+    # Subtest: Hostile Scenario 5: Unit assignment self-escalation via client INSERT is blocked
+    ok 5 - Hostile Scenario 5: Unit assignment self-escalation via client INSERT is blocked
+      ---
+      duration_ms: 0.083
+      ...
+    # Subtest: Hostile Scenario 6: Commander cannot access welfare case notes or reports
+    ok 6 - Hostile Scenario 6: Commander cannot access welfare case notes or reports
+      ---
+      duration_ms: 0.0634
+      ...
+    # Subtest: Hostile Scenario 7: Unassigned welfare officer cannot snoop on another officer case
+    ok 7 - Hostile Scenario 7: Unassigned welfare officer cannot snoop on another officer case
+      ---
+      duration_ms: 0.059
+      ...
+    # Subtest: Hostile Scenario 8: Direct execution of break-glass read is revoked from client roles
+    ok 8 - Hostile Scenario 8: Direct execution of break-glass read is revoked from client roles
+      ---
+      duration_ms: 0.2969
+      ...
+    # Subtest: Hostile Scenario 9: Zero personal identifiers leaked across all published releases
+    ok 9 - Hostile Scenario 9: Zero personal identifiers leaked across all published releases
+      ---
+      duration_ms: 20.9697
+      ...
+    1..9
+ok 18 - Phase 1 ΓÇö Hostile Penetration & Adversarial Security Scenarios
+  ---
+  duration_ms: 28.4263
+  type: 'suite'
+  ...
+# Subtest: Phase 1 ΓÇö Live Database / Docker Connection Status
+    # Subtest: Evaluates live database status without falsely claiming unrun tests
+    ok 1 - Evaluates live database status without falsely claiming unrun tests
+      ---
+      duration_ms: 0.9022
+      ...
+    1..1
+ok 19 - Phase 1 ΓÇö Live Database / Docker Connection Status
+  ---
+  duration_ms: 1.0415
+  type: 'suite'
+  ...
+# Subtest: checkGroupSuppression suppresses groups smaller than MIN_GROUP_SIZE (5)
+ok 20 - checkGroupSuppression suppresses groups smaller than MIN_GROUP_SIZE (5)
+  ---
+  duration_ms: 1.708
+  ...
+# Subtest: checkCellSuppression suppresses small cells (<5) and revealing complements
+ok 21 - checkCellSuppression suppresses small cells (<5) and revealing complements
+  ---
+  duration_ms: 0.2555
+  ...
+# Subtest: validatePublicReleasePayload throws error if personal or unreleased fields are present
+ok 22 - validatePublicReleasePayload throws error if personal or unreleased fields are present
+  ---
+  duration_ms: 0.825
+  ...
+# Subtest: deriveReleaseBand maps the index to the public DB band vocabulary
+ok 23 - deriveReleaseBand maps the index to the public DB band vocabulary
+  ---
+  duration_ms: 1.7995
+  ...
+# Subtest: fixture: group size four is fully suppressed, no figures leak
+ok 24 - fixture: group size four is fully suppressed, no figures leak
+  ---
+  duration_ms: 3.8117
+  ...
+# Subtest: fixture: group size five with a one-person breakout suppresses only the revealing cell
+ok 25 - fixture: group size five with a one-person breakout suppresses only the revealing cell
+  ---
+  duration_ms: 1.7622
+  ...
+# Subtest: fixture: incomplete duty coverage yields "insufficient data", never a zero index
+ok 26 - fixture: incomplete duty coverage yields "insufficient data", never a zero index
+  ---
+  duration_ms: 0.6181
+  ...
+# Subtest: fixture: repeated release calls return identical stored values, never resampled
+ok 27 - fixture: repeated release calls return identical stored values, never resampled
+  ---
+  duration_ms: 1.0049
+  ...
+# Subtest: fixture: baseline boundary -- spike rule requires at least four comparable prior weeks
+ok 28 - fixture: baseline boundary -- spike rule requires at least four comparable prior weeks
+  ---
+  duration_ms: 2.2375
+  ...
+# Subtest: fixture: a triggered unit produces a deduplicated sustained-high result
+ok 29 - fixture: a triggered unit produces a deduplicated sustained-high result
+  ---
+  duration_ms: 1.4025
+  ...
+# Subtest: Phase 4 ΓÇö Welfare Report Status Transitions
+    # Subtest: Enforces valid statuses: new, acknowledged, action_taken, follow_up, closed
+    ok 1 - Enforces valid statuses: new, acknowledged, action_taken, follow_up, closed
+      ---
+      duration_ms: 1.148
+      ...
+    # Subtest: Allows valid progression: new -> acknowledged -> action_taken -> follow_up -> closed
+    ok 2 - Allows valid progression: new -> acknowledged -> action_taken -> follow_up -> closed
+      ---
+      duration_ms: 0.2389
+      ...
+    # Subtest: Allows action_taken -> closed directly with documented notes
+    ok 3 - Allows action_taken -> closed directly with documented notes
+      ---
+      duration_ms: 0.1333
+      ...
+    # Subtest: Rejects closing without documented outcome notes or with notes <10 characters
+    ok 4 - Rejects closing without documented outcome notes or with notes <10 characters
+      ---
+      duration_ms: 0.232
+      ...
+    # Subtest: Rejects invalid status transitions (e.g., skipping required workflow steps)
+    ok 5 - Rejects invalid status transitions (e.g., skipping required workflow steps)
+      ---
+      duration_ms: 0.1345
+      ...
+    1..5
+ok 30 - Phase 4 ΓÇö Welfare Report Status Transitions
+  ---
+  duration_ms: 2.9734
+  type: 'suite'
+  ...
+# Subtest: Phase 4 ΓÇö Welfare Overdue Review Indicator
+    # Subtest: A closed report is never overdue
+    ok 1 - A closed report is never overdue
+      ---
+      duration_ms: 0.3102
+      ...
+    # Subtest: Flags a report as overdue when follow_up_on has passed and status is not closed
+    ok 2 - Flags a report as overdue when follow_up_on has passed and status is not closed
+      ---
+      duration_ms: 0.1589
+      ...
+    # Subtest: Does not flag report as overdue when follow_up_on is in the future
+    ok 3 - Does not flag report as overdue when follow_up_on is in the future
+      ---
+      duration_ms: 0.2054
+      ...
+    # Subtest: Flags a "new" report as overdue if unacknowledged for more than 48 hours
+    ok 4 - Flags a "new" report as overdue if unacknowledged for more than 48 hours
+      ---
+      duration_ms: 0.198
+      ...
+    # Subtest: Does not flag a "new" report as overdue if created recently (<48 hours)
+    ok 5 - Does not flag a "new" report as overdue if created recently (<48 hours)
+      ---
+      duration_ms: 0.1249
+      ...
+    1..5
+ok 31 - Phase 4 ΓÇö Welfare Overdue Review Indicator
+  ---
+  duration_ms: 1.3122
+  type: 'suite'
+  ...
+# Subtest: Phase 4 ΓÇö Assigned Welfare Officer Access Control
+    # Subtest: Allows access to the assigned welfare officer
+    ok 1 - Allows access to the assigned welfare officer
+      ---
+      duration_ms: 0.3399
+      ...
+    # Subtest: Denies access to an unassigned welfare officer
+    ok 2 - Denies access to an unassigned welfare officer
+      ---
+      duration_ms: 0.1656
+      ...
+    # Subtest: Denies access to a commander
+    ok 3 - Denies access to a commander
+      ---
+      duration_ms: 0.1388
+      ...
+    # Subtest: Denies access to anonymous requests
+    ok 4 - Denies access to anonymous requests
+      ---
+      duration_ms: 0.6539
+      ...
+    1..4
+ok 32 - Phase 4 ΓÇö Assigned Welfare Officer Access Control
+  ---
+  duration_ms: 1.4563
+  type: 'suite'
+  ...
+# Subtest: Phase 4 ΓÇö Snapshot and Briefing Builders
+    # Subtest: buildAggregateSnapshot creates valid confidential aggregate snapshot without personal identifiers
+    ok 1 - buildAggregateSnapshot creates valid confidential aggregate snapshot without personal identifiers
+      ---
+      duration_ms: 0.9912
+      ...
+    # Subtest: buildWelfareBriefing includes non-diagnostic safety disclaimer
+    ok 2 - buildWelfareBriefing includes non-diagnostic safety disclaimer
+      ---
+      duration_ms: 0.2116
+      ...
+    1..2
+ok 33 - Phase 4 ΓÇö Snapshot and Briefing Builders
+  ---
+  duration_ms: 1.3954
+  type: 'suite'
+  ...
+# Subtest: Phase 4 ΓÇö CRON_SECRET Server-Side Authorization
+    # Subtest: Rejects requests when CRON_SECRET is not configured
+    ok 1 - Rejects requests when CRON_SECRET is not configured
+      ---
+      duration_ms: 0.7509
+      ...
+    # Subtest: Rejects requests with missing or empty Authorization header
+    ok 2 - Rejects requests with missing or empty Authorization header
+      ---
+      duration_ms: 0.1308
+      ...
+    # Subtest: Rejects requests with mismatched secret or wrong bearer token
+    ok 3 - Rejects requests with mismatched secret or wrong bearer token
+      ---
+      duration_ms: 0.177
+      ...
+    # Subtest: Accepts valid Bearer token matching CRON_SECRET
+    ok 4 - Accepts valid Bearer token matching CRON_SECRET
+      ---
+      duration_ms: 0.1174
+      ...
+    1..4
+ok 34 - Phase 4 ΓÇö CRON_SECRET Server-Side Authorization
+  ---
+  duration_ms: 2.2526
+  type: 'suite'
+  ...
+# Subtest: Phase 4 ΓÇö Completed-Week Worker Date Helper
+    # Subtest: Computes the most recent completed Monday
+    ok 1 - Computes the most recent completed Monday
+      ---
+      duration_ms: 0.9781
+      ...
+    1..1
+ok 35 - Phase 4 ΓÇö Completed-Week Worker Date Helper
+  ---
+  duration_ms: 1.0962
+  type: 'suite'
+  ...
+# Subtest: Phase 4 ΓÇö Deterministic Trigger Rules in Worker (processUnitWeek)
+    # Subtest: Trigger rule 1 (Spike): triggers report when current >= 40 and current >= baseline + 15 with >= 4 earlier comparable weeks
+    ok 1 - Trigger rule 1 (Spike): triggers report when current >= 40 and current >= baseline + 15 with >= 4 earlier comparable weeks
+      ---
+      duration_ms: 11.4356
+      ...
+    # Subtest: Trigger rule 1 (Spike boundary): does NOT fire spike trigger if fewer than 4 earlier comparable weeks
+    ok 2 - Trigger rule 1 (Spike boundary): does NOT fire spike trigger if fewer than 4 earlier comparable weeks
+      ---
+      duration_ms: 7.408
+      ...
+    # Subtest: Trigger rule 2 (Sustained-high): triggers report when current >= 75 for two consecutive completed weeks
+    ok 3 - Trigger rule 2 (Sustained-high): triggers report when current >= 75 for two consecutive completed weeks
+      ---
+      duration_ms: 7.2645
+      ...
+    # Subtest: Maintains at most ONE active report per unit (deduplication)
+    ok 4 - Maintains at most ONE active report per unit (deduplication)
+      ---
+      duration_ms: 6.401
+      ...
+    # Subtest: Healthy unit does not trigger a welfare report
+    ok 5 - Healthy unit does not trigger a welfare report
+      ---
+      duration_ms: 6.7942
+      ...
+    1..5
+ok 36 - Phase 4 ΓÇö Deterministic Trigger Rules in Worker (processUnitWeek)
+  ---
+  duration_ms: 39.6407
+  type: 'suite'
+  ...
+# Subtest: Phase 4 ΓÇö Worker Idempotency & Database Constraint Simulation
+    # Subtest: Re-running the worker with existing release reuses release and creates no duplicate
+    ok 1 - Re-running the worker with existing release reuses release and creates no duplicate
+      ---
+      duration_ms: 1.251
+      ...
+    # Subtest: Handles concurrent retry collision via unique database constraints (Postgres 23505)
+    ok 2 - Handles concurrent retry collision via unique database constraints (Postgres 23505)
+      ---
+      duration_ms: 1.7541
+      ...
+    1..2
+ok 37 - Phase 4 ΓÇö Worker Idempotency & Database Constraint Simulation
+  ---
+  duration_ms: 3.2001
+  type: 'suite'
+  ...
+1..37
+# tests 103
+# suites 17
+# pass 103
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 871.5906
+
+> @unitpulse/ml@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: calculateMedian correctly computes median for odd and even length arrays
+ok 1 - calculateMedian correctly computes median for odd and even length arrays
+  ---
+  duration_ms: 1.1835
+  ...
+# Subtest: calculateBaseline requires at least 4 comparable weeks for spike analysis
+ok 2 - calculateBaseline requires at least 4 comparable weeks for spike analysis
+  ---
+  duration_ms: 0.2511
+  ...
+# Subtest: evaluateTriggers fires spike trigger when index >= 40 and index >= baseline + 15
+ok 3 - evaluateTriggers fires spike trigger when index >= 40 and index >= baseline + 15
+  ---
+  duration_ms: 0.2077
+  ...
+# Subtest: evaluateTriggers fires sustained-high trigger when index >= 75 for two consecutive weeks
+ok 4 - evaluateTriggers fires sustained-high trigger when index >= 75 for two consecutive weeks
+  ---
+  duration_ms: 0.1227
+  ...
+# Subtest: evaluateTriggers deduplicates when an active report already exists
+ok 5 - evaluateTriggers deduplicates when an active report already exists
+  ---
+  duration_ms: 0.1087
+  ...
+# Subtest: boundary: days-since-leave >60 is strict (60 = 0 pts, 61 = 15 pts)
+ok 6 - boundary: days-since-leave >60 is strict (60 = 0 pts, 61 = 15 pts)
+  ---
+  duration_ms: 1.4065
+  ...
+# Subtest: boundary: recovery gap >35% is strict (35 = 0 pts, 36 = 10 pts)
+ok 7 - boundary: recovery gap >35% is strict (35 = 0 pts, 36 = 10 pts)
+  ---
+  duration_ms: 0.8454
+  ...
+# Subtest: boundary: denial rate >25% is strict, and requires >=5 decided requests
+ok 8 - boundary: denial rate >25% is strict, and requires >=5 decided requests
+  ---
+  duration_ms: 0.2608
+  ...
+# Subtest: boundary: night-duty tiers (5/8/12) are strict
+ok 9 - boundary: night-duty tiers (5/8/12) are strict
+  ---
+  duration_ms: 0.3011
+  ...
+# Subtest: boundary: deployment tiers (60/90) are strict
+ok 10 - boundary: deployment tiers (60/90) are strict
+  ---
+  duration_ms: 0.1709
+  ...
+# Subtest: boundary: workload tiers (52/60) are strict
+ok 11 - boundary: workload tiers (52/60) are strict
+  ---
+  duration_ms: 0.1163
+  ...
+# Subtest: boundary: coverage ratio exactly at MIN_COVERAGE_RATIO is sufficient, just below is not
+ok 12 - boundary: coverage ratio exactly at MIN_COVERAGE_RATIO is sufficient, just below is not
+  ---
+  duration_ms: 0.1164
+  ...
+# Subtest: absent/zero denominator: an empty metrics object never throws and never fabricates risk
+ok 13 - absent/zero denominator: an empty metrics object never throws and never fabricates risk
+  ---
+  duration_ms: 0.1029
+  ...
+# Subtest: calculateUnitStrainIndex returns insufficient_data when coverage is below 80%
+ok 14 - calculateUnitStrainIndex returns insufficient_data when coverage is below 80%
+  ---
+  duration_ms: 1.5565
+  ...
+# Subtest: calculateUnitStrainIndex produces 0 for clean healthy metrics
+ok 15 - calculateUnitStrainIndex produces 0 for clean healthy metrics
+  ---
+  duration_ms: 0.1762
+  ...
+# Subtest: calculateUnitStrainIndex awards correct points for elevated metrics with standard mask
+ok 16 - calculateUnitStrainIndex awards correct points for elevated metrics with standard mask
+  ---
+  duration_ms: 0.1156
+  ...
+# Subtest: calculateUnitStrainIndex normalizes score when leave denial rule is omitted
+ok 17 - calculateUnitStrainIndex normalizes score when leave denial rule is omitted
+  ---
+  duration_ms: 0.7461
+  ...
+1..17
+# tests 17
+# suites 0
+# pass 17
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 80.7781
+
+> unitpulse@0.1.0 test:e2e
+> node scripts/test-e2e.js
+
+========================================================
+Unit Pulse 2.0 ΓÇö Phase 0-3 Verification & Security Audit
+========================================================
+
+Γ£à PASS: Root package.json exists with required workspaces
+Γ£à PASS: Root package.json contains all required scripts
+Γ£à PASS: .gitignore exists and protects *.env.local, .env, and secrets
+Γ£à PASS: No service-role, AI, cron, or encryption secrets prefixed with NEXT_PUBLIC_
+Γ£à PASS: Public explanation page and /login page exist in frontend App Router
+Γ£à PASS: Public explanation page includes synthetic demo and non-diagnosis safety statement
+Γ£à PASS: TODO.md exists with transparent roadmap across all development phases
+Γ£à PASS: Backend and ML modules provide valid exports and resolve correctly
+Γ£à PASS: Phase 1 SQL migration defines private raw tables and RLS on all public tables
+Γ£à PASS: Phase 1 synthetic seed.sql exists and enforces 6 fictional units, 360 personnel, and 12 snapshots
+Γ£à PASS: Phase 1 permission test file exists in backend/tests/permissions.test.js
+Γ£à PASS: Phase 2 metrics.js and release.js exist and are re-exported from backend/src/index.js
+Γ£à PASS: Phase 2 release pipeline suppresses groups under five and never resamples noise on repeat calls
+Γ£à PASS: Phase 3 commander pages, API routes, and no-store middleware exist
+Γ£à PASS: Phase 3 commander view-model denies cross-unit access and never leaks a forbidden field in API payloads
+Γ£à PASS: Phase 4 completed-week worker, cron route, and welfare portal files exist
+Γ£à PASS: Phase 4 functional smoke test: cron auth, officer access gate, status transitions, and overdue indicator
+Γ£à PASS: Phase 5 AI adapter, briefing routes, and print-friendly export exist
+Γ£à PASS: Phase 5 functional smoke test: deterministic fallback, safety rejection, server assembly, zero leaks
+
+--------------------------------------------------------
+Results: 19/19 checks passed.
+Γ£à Phase 0-5 verification passed with zero security defects.
+
+> unitpulse@0.1.0 lint
+> npm run lint --workspaces --if-present
+
+
+> @unitpulse/frontend@0.1.0 lint
+> next lint
+
+Γ£ö No ESLint warnings or errors
+
+> @unitpulse/backend@0.1.0 lint
+> node scripts/lint.js
+
+[LINT] Checking @unitpulse/backend source files...
+[LINT OK] Verified 11 files in @unitpulse/backend.
+
+> @unitpulse/ml@0.1.0 lint
+> node scripts/lint.js
+
+[LINT] Checking @unitpulse/ml source files...
+[LINT OK] Verified 6 files in @unitpulse/ml.

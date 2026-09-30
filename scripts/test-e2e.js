@@ -346,12 +346,99 @@ await check('Phase 4 functional smoke test: cron auth, officer access gate, stat
   return true;
 });
 
+// 17. Phase 5 — Verify AI adapter, briefing routes, and print-friendly export exist
+await check('Phase 5 AI adapter, briefing routes, and print-friendly export exist', () => {
+  const paths = [
+    path.join(rootDir, 'backend', 'src', 'ai-adapter.js'),
+    path.join(rootDir, 'supabase', 'migrations', '20260930140000_phase5_briefings.sql'),
+    path.join(rootDir, 'frontend', 'src', 'lib', 'briefings', 'repository.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'api', 'briefings', '[unitId]', 'route.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'api', 'briefings', '[unitId]', 'events', 'route.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'api', 'briefings', '[unitId]', 'print', 'route.js'),
+    path.join(rootDir, 'frontend', 'src', 'middleware.js'),
+  ];
+  if (!paths.every((p) => fs.existsSync(p))) return false;
+  const middleware = fs.readFileSync(paths[6], 'utf8');
+  return middleware.includes('/api/briefings') && middleware.includes('no-store');
+});
+
+// 18. Phase 5 — Functional smoke test: AI adapter fallback, safety rejection, server-side assembly, zero personnel data
+await check('Phase 5 functional smoke test: deterministic fallback, safety rejection, server assembly, zero leaks', async () => {
+  const {
+    generateAggregateBriefing,
+    validateModelOutput,
+    assembleServerSideStatements,
+    assertOutboundPayloadSafety,
+    OFFICIAL_SAFETY_DISCLAIMER,
+  } = await import('../backend/src/ai-adapter.js');
+
+  const snapshot = {
+    unitId: 'UNIT-B',
+    unitCode: 'UNIT-B',
+    weekStart: '2026-09-28',
+    indexApprox: 75,
+    baselineApprox: 50,
+    band: 'elevated',
+    approvedMetrics: {
+      nightShiftsAverageApprox: 13,
+      recoveryGapPercentApprox: 40,
+    },
+  };
+
+  // 1. Deterministic fallback in NO_LLM_MODE
+  const fallback = await generateAggregateBriefing(snapshot, { noLlmMode: true });
+  if (fallback.source !== 'deterministic_fallback') return false;
+  if (!fallback.disclaimer.includes('NOT a medical diagnosis')) return false;
+  if (fallback.suggestedActions.length !== 3) return false;
+
+  // 2. Safety rejection of clinical diagnosis
+  const badDiagnosis = JSON.stringify({
+    summary: 'Troops are showing symptoms of burnout and depression.',
+    contributingFactors: [{ factor: 'Night Duty', evidenceKey: 'night_duty', explanation: 'Excessive shifts.' }],
+    suggestedActions: [{ category: 'offer_welfare_review', text: 'Review conditions.' }],
+  });
+  const diagVal = validateModelOutput(badDiagnosis, snapshot);
+  if (diagVal.valid || diagVal.error !== 'forbidden_diagnosis_term') return false;
+
+  // 3. Safety rejection of punitive suggestions
+  const badPunitive = JSON.stringify({
+    summary: 'Elevated indicators.',
+    contributingFactors: [{ factor: 'Night Duty', evidenceKey: 'night_duty', explanation: 'Roster non-compliance.' }],
+    suggestedActions: [{ category: 'rebalance_roster', text: 'Initiate disciplinary sanctions.' }],
+  });
+  const punVal = validateModelOutput(badPunitive, snapshot);
+  if (punVal.valid || punVal.error !== 'forbidden_punitive_term') return false;
+
+  // 4. Server-side number assembly
+  const validModelData = {
+    summary: 'Unit shows elevated strain relative to baseline.',
+    contributingFactors: [
+      { factor: 'Night Duty Shifts', evidenceKey: 'night_duty', explanation: 'Shift rotations concentrated.' },
+    ],
+    suggestedActions: [{ category: 'rebalance_roster', text: 'Review duty rosters.' }],
+  };
+  const assembled = assembleServerSideStatements(validModelData, snapshot);
+  if (!assembled.contributingFactors[0].approvedMetricStatement.includes('~13 shifts/28d')) return false;
+
+  // 5. Outbound payload safety assert throws on personal IDs
+  let caughtLeak = false;
+  try {
+    assertOutboundPayloadSafety({ unitId: 'UNIT-B', personnelId: 'PER-B-001' });
+  } catch {
+    caughtLeak = true;
+  }
+  if (!caughtLeak) return false;
+
+  return true;
+});
+
 console.log('\n--------------------------------------------------------');
 console.log(`Results: ${passedChecks}/${totalChecks} checks passed.`);
 if (failures.length > 0) {
   console.log(`Failures:\n  - ${failures.join('\n  - ')}`);
   process.exit(1);
 } else {
-  console.log('✅ Phase 0-4 verification passed with zero security defects.');
+  console.log('✅ Phase 0-5 verification passed with zero security defects.');
   process.exit(0);
 }
+

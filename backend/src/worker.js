@@ -20,6 +20,7 @@
 
 import { runWeeklyRelease, DEFAULT_RELEASE_EPSILON } from './release.js';
 import { buildAggregateSnapshot, buildWelfareBriefing } from './welfare.js';
+import { getDeterministicBriefing, generateAggregateBriefing } from './ai-adapter.js';
 import { calculateBaseline, evaluateTriggers } from '@unitpulse/ml';
 
 /**
@@ -156,6 +157,22 @@ export function processUnitWeek({
         status: 'new',
       };
     }
+  }
+
+  const releaseSnapshot = {
+    unitId,
+    unitCode: unitId,
+    weekStart,
+    indexApprox: publicRelease?.index_approx ?? existingRelease?.index_approx,
+    baselineApprox: publicRelease?.baseline_approx ?? existingRelease?.baseline_approx,
+    band: publicRelease?.band ?? existingRelease?.band,
+    triggerRule: activeTriggerResult?.activeRules?.[0]?.rule || 'none',
+    approvedMetrics: publicRelease?.approved_metrics_json ?? existingRelease?.approved_metrics_json ?? {},
+  };
+  const unitBriefing = getDeterministicBriefing(releaseSnapshot);
+
+  if (publicRelease && !publicRelease.briefing_json) {
+    publicRelease.briefing_json = unitBriefing;
   }
 
   return {
@@ -355,6 +372,27 @@ export async function runWeeklyWorker({
           existingRelease,
           epsilon,
         });
+
+        // Enhance briefing with AI model if configured (otherwise uses deterministic fallback)
+        if (process.env.NO_LLM_MODE !== 'true' && process.env.AI_API_KEY) {
+          const snapshotForAi = {
+            unitId,
+            unitCode: unitId,
+            weekStart: targetWeek,
+            indexApprox: result.publicRelease?.index_approx ?? existingRelease?.index_approx,
+            baselineApprox: result.publicRelease?.baseline_approx ?? existingRelease?.baseline_approx,
+            band: result.publicRelease?.band ?? existingRelease?.band,
+            triggerRule: result.triggerResult?.activeRules?.[0]?.rule || 'none',
+            approvedMetrics: result.publicRelease?.approved_metrics_json ?? existingRelease?.approved_metrics_json ?? {},
+          };
+          try {
+            const aiBriefing = await generateAggregateBriefing(snapshotForAi, { logger });
+            if (result.publicRelease) result.publicRelease.briefing_json = aiBriefing;
+            if (result.welfareReport) result.welfareReport.briefing_json = aiBriefing;
+          } catch (aiErr) {
+            logger.warn?.(`[WORKER ${jobId}] AI briefing generation failed for unit ${unitId}, preserved deterministic fallback:`, aiErr.message);
+          }
+        }
 
         // G. Persist private metrics and public release if newly computed
         if (!existingRelease && result.publicRelease) {

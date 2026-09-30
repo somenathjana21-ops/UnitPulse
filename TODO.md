@@ -111,15 +111,22 @@
 
 ---
 
-### ⏳ Phase 5 — AI Adapter & Briefing
-- [ ] **Server-Only LLM Adapter (`backend/src/ai-adapter.js`)**:
-  - [ ] Switchable OpenAI-compatible client configured via `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`.
-  - [ ] Pass only privacy-approved aggregate metrics and allow-listed evidence codes.
-  - [ ] Validate structured output; assemble numerical statements server-side.
-  - [ ] Deterministic fallback templates in `NO_LLM_MODE=true` or when provider is unavailable.
-- [ ] **Print-to-PDF Aggregate Briefing**:
-  - [ ] Print-friendly aggregate HTML view at `/api/briefings/:unitId/print`.
-  - [ ] Support native browser Print &rarr; Save as PDF (no claim of external PDF server).
+### ✅ Phase 5 — AI Adapter & Briefing (Completed)
+- [x] **Server-Only LLM Adapter (`backend/src/ai-adapter.js`)**:
+  - [x] Switchable OpenAI-compatible client configured via `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`, `AI_JSON_MODE`, `AI_TIMEOUT_MS`.
+  - [x] Pass only privacy-approved aggregate metrics and allow-listed evidence codes (`leave_recovery`, `night_duty`, `continuous_deployment`, `weekly_hours`, `leave_utilization`).
+  - [x] Validate structured output; assemble numerical statements server-side from approved release values.
+  - [x] Strict safety rejection: rejects clinical diagnoses, punitive actions, definite causal claims, and invented metrics.
+  - [x] Capability difference handling: automatically handles providers that reject `response_format: { type: "json_object" }` (400) by retrying cleanly without it.
+  - [x] Deterministic fallback templates in `NO_LLM_MODE=true` or when provider is unavailable, rate-limited (429), or times out.
+- [x] **Weekly Aggregate Briefing Storage (`supabase/migrations/20260930140000_phase5_briefings.sql`)**:
+  - [x] Stored on `public.unit_week_releases.briefing_json` and `public.welfare_reports.briefing_json`.
+  - [x] Endpoint `GET /api/briefings/:unitId` returns stored, validated briefing with `Cache-Control: no-store`.
+  - [x] SSE endpoint `GET /api/briefings/:unitId/events` streams only validated stored sections (never raw model tokens).
+- [x] **Print-to-PDF Aggregate Briefing**:
+  - [x] Print-friendly aggregate HTML view at `/api/briefings/:unitId/print`.
+  - [x] Formatted for native browser Print &rarr; Save as PDF with `@media print` page breaks, high-contrast typography, and zero personnel data.
+  - [x] Non-diagnostic safety disclaimer displayed prominently at top and bottom.
 
 ---
 

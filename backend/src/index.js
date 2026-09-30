@@ -13,5 +13,6 @@ export * from './permissions.js';
 export * from './metrics.js';
 export * from './release.js';
 export * from './worker.js';
+export * from './ai-adapter.js';
 export * from './todo.js';
 

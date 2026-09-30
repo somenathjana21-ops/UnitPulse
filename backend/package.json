@@ -14,6 +14,7 @@
     "./metrics": "./src/metrics.js",
     "./release": "./src/release.js",
     "./worker": "./src/worker.js",
+    "./ai-adapter": "./src/ai-adapter.js",
     "./todo": "./src/todo.js"
   },
   "type": "module",
