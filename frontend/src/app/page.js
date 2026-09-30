@@ -44,7 +44,10 @@ export default function HomePage() {
           <span className="hero-badge">&bull; Synthetic Demo Only</span>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+          <Link href="/presentation" className="nav-btn" style={{ padding: '0.65rem 1.5rem', fontSize: '1rem', backgroundColor: '#10b981', color: '#ffffff' }}>
+            SIH Presentation Deck (6 Slides) &rarr;
+          </Link>
           <Link href="/login" className="nav-btn" style={{ padding: '0.65rem 1.5rem', fontSize: '1rem' }}>
             Access Role-Based Login &rarr;
           </Link>

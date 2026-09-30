@@ -13,11 +13,15 @@ SIH Problem Statement 26186 prototype. **No real personnel, operational, or depl
 - **Commander** (`/commander`, `/commander/units/:id`): Approved aggregate unit cards, rolling baseline trends, possible contributing conditions, and non-disciplinary supportive actions. Zero personnel identifiers or raw rows.
 - **Welfare Officer** (`/welfare`, `/welfare/reports/:id`, `/welfare/audit`): Assigned unit welfare reports, follow-up workflow milestones, exceptional reasoned 30-minute break-glass individual access with mandatory per-read audit logging, and dedicated officer audit trail.
 - **HR Uploader** (`/admin/import`): Restricted synthetic-CSV ingestion with strict 2MB size limit, schema and calendar date validation (rejects invalid dates like 2026-02-31), duty bounds (0-24 hrs), formula injection defense, duplicate detection, overlapping leave rejection, atomic transactional rollback, and safe error summaries (zero raw row logging). No generic database admin browser is provided.
+- **SIH Evaluator / Presentation Deck** (`/presentation`): Interactive official 6-slide Smart India Hackathon presentation deck with presenter notes, empirical demo fixture figures, and 1-click `@media print` landscape export to PDF.
 
 ## Repository Guide
 
 - `Project_Brief.md`: Start here.
 - `docs/`: Product, architecture, security, data specifications, test plans, and decision log.
+- `docs/sih-presentation-deck.md`: 6-slide official SIH presentation deck documentation.
+- `docs/two-minute-demo.md`: Verbatim 2-minute walkthrough script with displayed empirical figures.
+- `docs/12-deployment.md`: Complete Vercel preview deployment guide & environment variable checklist.
 - `Guidebook.md`: Phase-by-phase coding-agent prompts and verification gates.
 - `frontend/`: Next.js 14 App Router (JavaScript).
 - `backend/`: Server-only domain workflows, permissions, and ingestion logic.
@@ -38,7 +42,7 @@ npm run lint
 # 3. Run unit and domain integration test suites (230 tests passing)
 npm run test
 
-# 4. Run end-to-end security and functional verification suite (23 checks passing)
+# 4. Run end-to-end security and functional verification suite (25 checks passing)
 npm run test:e2e
 
 # 5. Compile production Next.js build (dynamic routes + no-store caching)
@@ -53,8 +57,11 @@ npm run dev
 # 8. Measure real performance benchmarks (dashboard response, weekly job, AI fallback, CSV throughput)
 node scripts/measure-performance.js
 
-# 9. Run Phase 7 release audit (formula injection, malformed CSV, size limits, bad dates, duplicates)
+# 9. Run Phase 7 ingestion hardening audit (formula injection, malformed CSV, size limits, bad dates, duplicates)
 node scripts/verify-phase-7.js
+
+# 10. Run comprehensive Phase 8 release audit across all 12 criteria (12/12 PASS)
+node scripts/verify-phase-8-release.js
 ```
 
 *Note on Supabase Local Development:*

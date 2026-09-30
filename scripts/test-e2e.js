@@ -626,13 +626,64 @@ await check('Phase 7 functional smoke test: RBAC gates, formula injection defens
   return true;
 });
 
+// Check 23: Phase 8 deployment configuration, presentation deck, and documentation files exist
+await check('Phase 8 deployment, presentation deck, and release audit files exist', () => {
+  const vercelJsonPath = path.join(rootDir, 'vercel.json');
+  const presentationPage = path.join(rootDir, 'frontend/src/app/presentation/page.js');
+  const presentationViewer = path.join(rootDir, 'frontend/src/app/presentation/PresentationViewer.js');
+  const deckDoc = path.join(rootDir, 'docs/sih-presentation-deck.md');
+  const demoDoc = path.join(rootDir, 'docs/two-minute-demo.md');
+  const auditScript = path.join(rootDir, 'scripts/verify-phase-8-release.js');
+
+  return (
+    fs.existsSync(vercelJsonPath) &&
+    fs.existsSync(presentationPage) &&
+    fs.existsSync(presentationViewer) &&
+    fs.existsSync(deckDoc) &&
+    fs.existsSync(demoDoc) &&
+    fs.existsSync(auditScript)
+  );
+});
+
+// Check 24: Phase 8 functional release audit smoke test
+await check('Phase 8 functional smoke test: vercel.json cron, security headers, print layouts, and release gates', async () => {
+  // 1. Verify vercel.json cron and security headers
+  const vercelJson = JSON.parse(fs.readFileSync(path.join(rootDir, 'vercel.json'), 'utf8'));
+  const hasCron = Array.isArray(vercelJson.crons) && vercelJson.crons.some((c) => c.path === '/api/internal/weekly-run');
+  const hasSecurityHeaders = Array.isArray(vercelJson.headers) && vercelJson.headers.some((h) => h.headers.some((x) => x.key === 'X-Content-Type-Options'));
+  const hasNoStoreHeader = Array.isArray(vercelJson.headers) && vercelJson.headers.some((h) => h.headers.some((x) => x.key === 'Cache-Control' && x.value.includes('no-store')));
+
+  if (!hasCron || !hasSecurityHeaders || !hasNoStoreHeader) return false;
+
+  // 2. Verify presentation viewer includes print-to-pdf landscape media query
+  const presentationCode = fs.readFileSync(path.join(rootDir, 'frontend/src/app/presentation/PresentationViewer.js'), 'utf8');
+  if (!presentationCode.includes('@media print') || !presentationCode.includes('break-after: page')) return false;
+
+  // 3. Verify demo documentation covers all 7 required walkthrough beats
+  const demoDoc = fs.readFileSync(path.join(rootDir, 'docs/two-minute-demo.md'), 'utf8');
+  const hasBeat1 = demoDoc.includes('6 Fictional Units');
+  const hasBeat2 = demoDoc.includes('Unit Index vs Baseline Jump');
+  const hasBeat4 = demoDoc.includes('Confidential Assigned Report');
+  const hasBeat5 = demoDoc.includes('Audited 30-Min Break-Glass Read');
+
+  if (!hasBeat1 || !hasBeat2 || !hasBeat4 || !hasBeat5) return false;
+
+  // 4. Verify release audit results file exists and has 12/12 PASS
+  const auditResultsPath = path.join(rootDir, 'tests/results/phase-8-release-audit-2026-09-30.txt');
+  if (!fs.existsSync(auditResultsPath)) return false;
+  const auditContent = fs.readFileSync(auditResultsPath, 'utf8');
+  if (!auditContent.includes('12/12 PASS') || !auditContent.includes('RELEASE APPROVED')) return false;
+
+  return true;
+});
+
 console.log('\n--------------------------------------------------------');
 console.log(`Results: ${passedChecks}/${totalChecks} checks passed.`);
 if (failures.length > 0) {
   console.log(`Failures:\n  - ${failures.join('\n  - ')}`);
   process.exit(1);
 } else {
-  console.log('✅ Phase 0-7 verification passed with zero security defects.');
+  console.log('✅ Phase 0-8 verification passed with zero security defects.');
   process.exit(0);
 }
 

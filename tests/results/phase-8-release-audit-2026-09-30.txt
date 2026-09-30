@@ -1,0 +1,66 @@
+﻿================================================================
+Unit Pulse 2.0 ΓÇö Phase 8 Release Audit Verification
+================================================================
+
+Γ£à [PASS] Item 1: Secrets Isolation & Management
+   Evidence: Zero NEXT_PUBLIC_ service/AI/cron/encryption keys in source code; .gitignore protects all .env.local variants.
+   - Checked 4 sensitive server keys across frontend, backend, ml, and scripts.
+   - .gitignore explicitly protects *.env.local, .env, *.pem, *.key, and secrets/.
+Γ£à [PASS] Item 2: Git History Integrity
+   Evidence: Git commit history contains clean phase commit messages and zero committed API credentials or secret tokens.
+   - Inspected latest commits back to repository root.
+   - Latest commit follows phase naming: "52e64c0 phase-7: implement restricted /admin/import synthetic CSV flow, hardening, accessibility, and performance benchmarks".
+Γ£à [PASS] Item 3: Environment Settings & Vercel Configuration
+   Evidence: Complete environment variable checklist in docs/12-deployment.md and .env.example; vercel.json enforces headers and cron.
+   - vercel.json configures Next.js framework, monorepo build, weekly cron schedule, and security headers.
+   - Cache-Control: no-store header configured in vercel.json and frontend/src/middleware.js for all role routes.
+Γ£à [PASS] Item 4: Synthetic-Only Dataset Integrity
+   Evidence: Dataset contains 100% fictional units (UNIT-A to UNIT-F) and synthetic email domains (@synthetic.unitpulse.local).
+   - Zero real armed force rosters, real personnel names, or live tactical deployment locations.
+   - Seed data generates 6 fictional units, 360 synthetic personnel, and 12 completed snapshot weeks.
+Γ£à [PASS] Item 5: Strict Role Boundaries & Access Gates
+   Evidence: All cross-role, unauthenticated, and unassigned access attempts are strictly denied with 401/403/404.
+   - Anonymous access denied across Commander, Welfare, and Ingestion endpoints.
+   - Commander cross-unit access denied with 404 (conceals unit existence).
+   - Commander denied on /individuals (403) and /admin/import (403).
+   - Welfare Officer denied on /admin/import (403) and unassigned reports (404).
+   - HR Uploader authorized on /admin/import (200).
+Γ£à [PASS] Item 6: Small-Group Suppression & Differential Privacy
+   Evidence: Units under 5 personnel completely suppressed (index and baseline null in API payload); count noise sampled once per release.
+   - Verified k < 5 suppresses entire unit release from public API payload.
+   - Differential privacy Laplace noise (epsilon = 0.2) protects count fields.
+   - Suppressed data is completely omitted from JSON response, never merely hidden in CSS.
+Γ£à [PASS] Item 7: Welfare Report Idempotency & Deduplication
+   Evidence: Cron retries and concurrent runs deduplicate active reports; partial unique index guarantees at most 1 active report per unit.
+   - evaluateTriggers returns triggered=false when hasActiveReport=true.
+   - Database migration defines partial unique index idx_welfare_reports_active_per_unit.
+   - Worker traps error code 23505 and records reportsDeduplicated++ without failure.
+Γ£à [PASS] Item 8: Audited Reads & Break-Glass AES-256-GCM
+   Evidence: AES-256-GCM encryption verified; compulsory justification enforced; 30-min expiry verified; per-read audit row logged.
+   - Plaintext justifications are never logged to console or errors and stored encrypted at rest.
+   - Direct table SELECT is revoked; reads occur strictly via private.execute_audited_break_glass_read.
+   - Output clamped to maximum 20 pseudonymous records; bulk export is prohibited.
+Γ£à [PASS] Item 9: AI Resilience & Deterministic Fallback
+   Evidence: Deterministic fallback generates safe, non-diagnostic briefings in <1ms; punitive actions and clinical diagnoses rejected.
+   - Model receives zero personal identifiers or unapproved metrics.
+   - Mandatory non-clinical safety disclaimer included on all briefing outputs.
+   - System operates with 100% availability in NO_LLM_MODE or during AI provider outages.
+Γ£à [PASS] Item 10: Print-to-PDF & Presentation Export
+   Evidence: Dedicated print views at /api/briefings/:unitId/print and /presentation format for landscape PDF export via @media print.
+   - Briefing print view formats high-contrast aggregate tables with non-diagnostic disclaimers and zero personal data.
+   - Presentation deck formats all 6 slides with exact landscape page breaks (break-after: page) for 1-click PDF export.
+Γ£à [PASS] Item 11: Production Build & Cache-Control Enforcement
+   Evidence: Production build succeeded cleanly; middleware and vercel.json enforce Cache-Control: no-store on all role-specific routes.
+   - All sensitive pages and APIs compile as dynamic (╞Æ) with zero static CDN caching.
+   - HTTP responses include no-store, no-cache, must-revalidate, and nosniff headers.
+Γ£à [PASS] Item 12: Cross-Role UI Accessibility & CSV Hardening
+   Evidence: Accessible chart summaries and semantic HTML tables present in TrendChart.js; CSV formula injection and bad dates rejected.
+   - TrendChart.js provides visible accessible trend narratives and screen-reader accessible HTML data tables.
+   - CSV ingestion rejects formula triggers (=, +, -, @, \t, \r), duty hours >24, and bad dates (2026-02-31).
+   - Safe error summaries report row/column only; zero raw row payloads dumped to server output.
+
+================================================================
+Phase 8 Release Audit Summary: 12/12 PASS | 0 FAIL | 0 NOT VERIFIED
+================================================================
+
+Γ£à RELEASE APPROVED: All 12 release-gate criteria verified with empirical evidence.

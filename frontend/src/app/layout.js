@@ -42,6 +42,11 @@ export default function RootLayout({ children }) {
                   </a>
                 </li>
                 <li>
+                  <Link href="/presentation" className="nav-link">
+                    SIH Deck
+                  </Link>
+                </li>
+                <li>
                   <Link href="/login" className="nav-btn">
                     Role Portal Login
                   </Link>

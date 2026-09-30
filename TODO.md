@@ -18,7 +18,7 @@
 | **Phase 5** | AI Adapter & Briefing | OpenAI adapter, fallback templates, print-to-PDF export | ✅ **COMPLETED** |
 | **Phase 6** | Break-Glass Access & Audit | 30-min grant, AES-256-GCM encryption, narrow transactional read, officer audit viewer | ✅ **COMPLETED** |
 | **Phase 7** | Import, Hardening & Accessibility | Restricted `/admin/import` synthetic CSV, limits, accessible charts | ✅ **COMPLETED** |
-| **Phase 8** | Deployment & Final Demo | Vercel preview docs, SIH presentation, final audit | ⏳ **PENDING (Phase 8)** |
+| **Phase 8** | Deployment & Final Demo | Vercel preview docs, SIH presentation, final audit | ✅ **COMPLETED** |
 
 ---
 
@@ -196,6 +196,26 @@
 
 ---
 
+### ✅ Phase 8 — Deployment & Final Demo (Completed)
+- [x] **Vercel Preview & Production Configuration (`vercel.json`)**:
+  - [x] Monorepo build and installation scripts.
+  - [x] Vercel Cron schedule for `/api/internal/weekly-run` every Monday at 02:00 UTC.
+  - [x] Security headers: `Cache-Control: no-store` on sensitive routes, `nosniff`, `DENY`.
+- [x] **Deployment Documentation & Environment Checklist (`docs/12-deployment.md`)**:
+  - [x] Clear client-side (`NEXT_PUBLIC_`) vs server-side only secret isolation.
+  - [x] Setup instructions for Vercel project environment variables.
+  - [x] Remote hosted Supabase migration and synthetic seed instructions.
+  - [x] Ethical boundaries and non-clinical operational safety disclaimer.
+- [x] **SIH Presentation Deck & Two-Minute Demo**:
+  - [x] `docs/sih-presentation-deck.md`: 6-slide deck documentation (Problem 26186, Ministry of Home Affairs, CRPF).
+  - [x] `docs/two-minute-demo.md`: Verbatim 2-minute walkthrough script with actual empirical figures (UNIT-A index 0, UNIT-B index 75, report #11111111).
+  - [x] `frontend/src/app/presentation/`: Interactive 6-slide presentation deck with `@media print` landscape export to PDF.
+- [x] **Comprehensive Release Audit (`scripts/verify-phase-8-release.js`)**:
+  - [x] 12/12 release criteria verified with real assertions (Secrets, Git history, Env settings, Synthetic dataset, Role boundaries, Small-group suppression, Report idempotency, Audited reads, AI fallback, Print-to-PDF, Production build, Cross-role accessibility).
+  - [x] Results saved to `tests/results/phase-8-release-audit-2026-09-30.txt`.
+
+---
+
 ## Release Gate Checklist (Must pass before production deployment)
 - [x] No personnel-level rows returned to commander endpoints.
 - [x] Small groups (<5) and small cells completely suppressed in API and UI.
@@ -204,4 +224,5 @@
 - [x] AI model receives no direct personnel identifiers or unreleased metrics.
 - [x] Zero hardcoded service keys or client-prefixed secrets (`NEXT_PUBLIC_`) in codebase.
 - [x] Ingestion endpoint restricts upload to HR Uploader, enforces 2MB limit, rejects formula injection, and commits zero partial rows on bad CSV.
+- [x] Comprehensive release audit passes all 12 criteria with empirical evidence and zero release-blocking defects.
 
