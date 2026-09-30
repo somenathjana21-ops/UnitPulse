@@ -18,7 +18,22 @@
 
 -- 1. Schemas setup
 create schema if not exists private;
-create schema if not exists auth;
+
+-- Ensure auth schema and mock auth.users table exist ONLY in standalone test environments
+-- where Supabase Auth is not pre-installed. In hosted Supabase, auth.users is managed
+-- by supabase_admin and attempting direct DDL in auth triggers permission denied.
+do $$
+begin
+  if not exists (select 1 from pg_namespace where nspname = 'auth') then
+    execute 'create schema auth';
+  end if;
+  if not exists (select 1 from information_schema.tables where table_schema = 'auth' and table_name = 'users') then
+    execute 'create table auth.users (id uuid primary key default gen_random_uuid(), email text unique, created_at timestamptz not null default now())';
+  end if;
+exception
+  when insufficient_privilege then
+    null;
+end $$;
 
 -- Revoke all direct permissions on private schema from browser/client roles
 revoke all on schema private from public;
@@ -26,13 +41,6 @@ revoke all on schema private from anon;
 revoke all on schema private from authenticated;
 grant usage on schema private to service_role;
 grant usage on schema private to postgres;
-
--- Ensure auth.users exists (for standalone test environments where Supabase auth isn't pre-booted)
-create table if not exists auth.users (
-  id uuid primary key default gen_random_uuid(),
-  email text unique,
-  created_at timestamptz not null default now()
-);
 
 -- ==============================================================================
 -- 2. PRIVATE SOURCE TABLES (Raw Operational Data — Never exposed to browser)
