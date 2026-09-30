@@ -11,7 +11,7 @@
 | Phase | Title | Target Scope | Status |
 |---|---|---|---|
 | **Phase 0** | Scaffold & Environment | Root, `frontend/`, `backend/`, `ml/`, `scripts/`, `.gitignore` | ✅ **COMPLETED** |
-| **Phase 1** | Schema, Roles & Synthetic Seed | `supabase/migrations/`, `scripts/seed-demo.js`, role RLS | ⏳ **PENDING (Phase 1)** |
+| **Phase 1** | Schema, Roles & Synthetic Seed | `supabase/migrations/`, `scripts/seed-demo.js`, role RLS | ✅ **COMPLETED** |
 | **Phase 2** | Metrics, Index, Baseline & Privacy Release | `backend/src/release.js`, `ml/src/`, Laplace noise, fixtures | ⏳ **PENDING (Phase 2)** |
 | **Phase 3** | Commander Dashboard & Walkthrough | `frontend/src/app/commander/`, trends, cards, accessible charts | ⏳ **PENDING (Phase 3)** |
 | **Phase 4** | Weekly Report & Welfare Workflow | `frontend/src/app/welfare/`, Vercel cron worker, overdue alerts | ⏳ **PENDING (Phase 4)** |
@@ -32,23 +32,27 @@
 
 ---
 
-### ⏳ Phase 1 — Schema, Roles & Synthetic Seed (Upcoming)
-- [ ] **Database Migrations (`supabase/migrations/`)**:
-  - [ ] Create private schema for raw synthetic tables: `personnel`, `leave_records`, `duty_records`, `deployments`, `leave_eligibility`.
-  - [ ] Ensure private schema is **not exposed** to browser clients via PostgREST.
-  - [ ] Create public release/report tables: `unit_week_releases`, `welfare_reports`, `user_roles`, `unit_assignments`, `access_grants`, `welfare_audit_log`.
-  - [ ] Enable Row-Level Security (RLS) on all public tables with strict role/unit assignment policies.
-  - [ ] Do **not** attempt to place RLS directly on a materialized view.
-  - [ ] Create narrow database functions for scoped break-glass grant generation and transactional individual reads with logging.
-- [ ] **Synthetic Seed Generator (`scripts/seed-demo.js`)**:
-  - [ ] Generate 6 fictional units (e.g., `UNIT-A` through `UNIT-F`) with ~60 synthetic personnel each.
-  - [ ] Generate ~180 days of historical records with at least 12 completed weekly snapshots.
-  - [ ] Create 1 elevated unit (leave backlog & heavy night shifts) and 1 stable recovery unit.
-  - [ ] Zero real personnel names, real force identifiers, or operational locations.
-- [ ] **Permission Integration Tests**:
-  - [ ] Verify anonymous and commander users cannot query raw personnel rows.
-  - [ ] Verify changing unit ID in queries does not reveal unauthorized unit data.
-  - [ ] Verify users cannot self-assign or escalate roles.
+### ✅ Phase 1 — Schema, Roles & Synthetic Seed (Completed)
+- [x] **Database Migrations (`supabase/migrations/20260930120000_phase1_initial_schema.sql`)**:
+  - [x] Create private schema for raw synthetic tables: `units`, `personnel`, `leave_records`, `duty_records`, `deployments`, `leave_eligibility`, `unit_week_metrics`, `access_grants`, `access_audit`.
+  - [x] Ensure private schema is **not exposed** to browser clients (`REVOKE ALL ON SCHEMA private FROM public, anon, authenticated`).
+  - [x] Create public release/report tables: `unit_week_releases`, `welfare_reports`, `user_roles`, `unit_assignments`.
+  - [x] Enable Row-Level Security (RLS) on all public tables with strict role/unit assignment policies.
+  - [x] Do **not** attempt to place RLS directly on a materialized view (architectural constraint documented in D-16).
+  - [x] Create narrow database functions for scoped break-glass grant generation and transactional individual reads with logging (`private.execute_audited_break_glass_read`).
+  - [x] Enforce at most one active welfare report per unit via partial unique index `idx_welfare_reports_active_per_unit`.
+  - [x] Create narrow role provisioning procedure `public.provision_user_role` restricted to `service_role`.
+- [x] **Synthetic Seed Generator (`scripts/seed-demo.js`)**:
+  - [x] Generate 6 fictional units (`UNIT-A` through `UNIT-F`) with ~60 synthetic personnel each (360 total).
+  - [x] Generate ~180 days of historical records with 12 completed weekly snapshots (plus 14 warm-up weeks).
+  - [x] Create 1 elevated unit (`UNIT-B`: sustained high index >= 70, high night shifts, recovery gap > 35%, triggering 1 confidential report) and 1 stable unit (`UNIT-A`: index <= 25, regular leave, 0 reports).
+  - [x] Zero real personnel names, real force identifiers, or operational locations.
+  - [x] Output complete idempotent SQL statements to `supabase/seed.sql`.
+- [x] **Permission Integration Tests (`backend/tests/permissions.test.js`)**:
+  - [x] Verify anonymous and commander users cannot query raw personnel rows.
+  - [x] Verify changing unit ID in queries does not reveal unauthorized unit data.
+  - [x] Verify users cannot self-assign or escalate roles.
+  - [x] Verify zero personnel identifiers in public release datasets.
 
 ---
 

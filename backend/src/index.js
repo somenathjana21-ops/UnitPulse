@@ -9,4 +9,5 @@ export * from './config.js';
 export * from './privacy.js';
 export * from './audit.js';
 export * from './welfare.js';
+export * from './permissions.js';
 export * from './todo.js';

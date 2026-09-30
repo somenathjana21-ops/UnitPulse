@@ -18,6 +18,9 @@ Record changes here when implementation differs from the approved design.
 | D-12 | No clinical ML training in MVP | No validated, ethically collected training labels | Accepted; future research only |
 | D-13 | Use npm workspaces for frontend, backend, and ml isolation | Strict trust boundary separation between server-only domain, pure ML, and UI | Accepted |
 | D-14 | Forbid NEXT_PUBLIC_ on service, AI, cron, and encryption secrets | Prevent any accidental credential leakage into client bundles with static and runtime guards | Accepted |
+| D-15 | Enforce private schema for raw operational data and public schema for RLS-protected releases | Eliminate direct PostgREST exposure of raw personnel, leave, duty, and deployment data | Accepted |
+| D-16 | Forbid RLS on materialized views | PostgreSQL engine does not support RLS on materialized views; aggregations remain in private schema | Accepted |
+| D-17 | Restrict role provisioning and break-glass reads to SECURITY DEFINER service_role functions | Prevent client-side role elevation, unit self-assignment, or unlogged individual table reads | Accepted |
 
 ## Change procedure
 

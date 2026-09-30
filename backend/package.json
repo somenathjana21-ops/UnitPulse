@@ -10,6 +10,7 @@
     "./privacy": "./src/privacy.js",
     "./audit": "./src/audit.js",
     "./welfare": "./src/welfare.js",
+    "./permissions": "./src/permissions.js",
     "./todo": "./src/todo.js"
   },
   "type": "module",

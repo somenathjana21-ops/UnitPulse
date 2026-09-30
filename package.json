@@ -2,6 +2,7 @@
   "name": "unitpulse",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Unit Pulse 2.0 — Privacy-First Aggregate Welfare Intelligence (Synthetic Demo Monorepo)",
   "workspaces": [
     "frontend",

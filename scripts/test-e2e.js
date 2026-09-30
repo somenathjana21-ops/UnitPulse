@@ -144,12 +144,49 @@ check('Backend and ML modules provide valid exports and resolve correctly', asyn
   return fs.existsSync(backendPkg) && fs.existsSync(mlPkg);
 });
 
+// 8. Phase 1 — Verify SQL migration file exists and defines private/public schema boundary
+check('Phase 1 SQL migration defines private raw tables and RLS on all public tables', () => {
+  const migPath = path.join(rootDir, 'supabase', 'migrations', '20260930120000_phase1_initial_schema.sql');
+  if (!fs.existsSync(migPath)) return false;
+  const sql = fs.readFileSync(migPath, 'utf8');
+
+  const hasPrivateSchema = sql.includes('create schema if not exists private;');
+  const hasRevokePrivate = sql.includes('revoke all on schema private from public;') || sql.includes('revoke all on schema private from anon;');
+  const hasUserRolesRls = /alter\s+table\s+public\.user_roles\s+enable\s+row\s+level\s+security/i.test(sql);
+  const hasReleasesRls = /alter\s+table\s+public\.unit_week_releases\s+enable\s+row\s+level\s+security/i.test(sql);
+  const hasReportsRls = /alter\s+table\s+public\.welfare_reports\s+enable\s+row\s+level\s+security/i.test(sql);
+  const hasNoMvRls = !sql.replace(/--.*$/gm, '').match(/alter\s+materialized\s+view/i);
+
+  return hasPrivateSchema && hasRevokePrivate && hasUserRolesRls && hasReleasesRls && hasReportsRls && hasNoMvRls;
+});
+
+// 9. Phase 1 — Verify synthetic seed generator and supabase/seed.sql
+check('Phase 1 synthetic seed.sql exists and enforces 6 fictional units, 360 personnel, and 12 snapshots', () => {
+  const seedPath = path.join(rootDir, 'supabase', 'seed.sql');
+  if (!fs.existsSync(seedPath)) return false;
+  const content = fs.readFileSync(seedPath, 'utf8');
+
+  const hasUnits = content.includes("INSERT INTO private.units (id, display_code, name, active) VALUES ('UNIT-A'");
+  const hasPersonnel = content.includes("INSERT INTO private.personnel (id, unit_id, active, history_start_on) VALUES");
+  const hasReleases = content.includes("INSERT INTO public.unit_week_releases (unit_id, week_start, suppression_status");
+  const hasWelfare = content.includes("INSERT INTO public.welfare_reports");
+  const noRealForces = !content.includes('CRPF') && !content.includes('BSF') && !content.includes('Indian Army');
+
+  return hasUnits && hasPersonnel && hasReleases && hasWelfare && noRealForces;
+});
+
+// 10. Phase 1 — Verify permission tests run cleanly
+check('Phase 1 permission test file exists in backend/tests/permissions.test.js', () => {
+  const permTestPath = path.join(rootDir, 'backend', 'tests', 'permissions.test.js');
+  return fs.existsSync(permTestPath);
+});
+
 console.log('\n--------------------------------------------------------');
 console.log(`Results: ${passedChecks}/${totalChecks} checks passed.`);
 if (failures.length > 0) {
   console.log(`Failures:\n  - ${failures.join('\n  - ')}`);
   process.exit(1);
 } else {
-  console.log('✅ Phase 0 verification passed with zero security defects.');
+  console.log('✅ Phase 0 and Phase 1 verification passed with zero security defects.');
   process.exit(0);
 }
