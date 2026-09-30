@@ -12,6 +12,8 @@
     "test": "node --test"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.45.4",
     "@unitpulse/backend": "*",
     "@unitpulse/ml": "*",
     "next": "^14.2.35",

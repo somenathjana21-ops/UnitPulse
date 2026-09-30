@@ -296,6 +296,11 @@ a:hover {
   color: var(--accent-amber);
 }
 
+.status-elevated {
+  background: var(--accent-red-bg);
+  color: var(--accent-red);
+}
+
 .site-footer {
   background-color: var(--bg-secondary);
   border-top: 1px solid var(--border-color);

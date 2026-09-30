@@ -1,7 +1,7 @@
 /**
  * scripts/test-e2e.js
  *
- * Phase 0-2 End-to-End Verification and Security Audit Script
+ * Phase 0-3 End-to-End Verification and Security Audit Script
  *
  * Validates:
  * 1. Root package.json scripts (dev, lint, test, test:e2e, build, seed:demo)
@@ -13,6 +13,7 @@
  * 7. Cross-workspace package import resolution
  * 8-10. Phase 1 schema/RLS/seed structural checks
  * 11-12. Phase 2 metrics/release module exports and a functional suppression/idempotency smoke test
+ * 13-14. Phase 3 commander page/route existence and a functional cross-unit-denial/no-leak smoke test
  */
 
 import fs from 'node:fs';
@@ -45,7 +46,7 @@ async function check(description, fn) {
 }
 
 console.log('========================================================');
-console.log('Unit Pulse 2.0 — Phase 0-2 Verification & Security Audit');
+console.log('Unit Pulse 2.0 — Phase 0-3 Verification & Security Audit');
 console.log('========================================================\n');
 
 // 1. Check root package.json
@@ -244,12 +245,52 @@ await check('Phase 2 release pipeline suppresses groups under five and never res
   return second.reused === true && JSON.stringify(second.publicRelease) === JSON.stringify(first.publicRelease);
 });
 
+// 13. Phase 3 — Verify commander dashboard pages, API routes, and no-store middleware exist
+await check('Phase 3 commander pages, API routes, and no-store middleware exist', () => {
+  const paths = [
+    path.join(rootDir, 'frontend', 'src', 'app', 'commander', 'page.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'commander', 'units', '[id]', 'page.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'api', 'commander', 'units', 'route.js'),
+    path.join(rootDir, 'frontend', 'src', 'app', 'api', 'commander', 'units', '[unitId]', 'route.js'),
+    path.join(rootDir, 'frontend', 'src', 'middleware.js'),
+  ];
+  if (!paths.every((p) => fs.existsSync(p))) return false;
+  const middleware = fs.readFileSync(paths[4], 'utf8');
+  return middleware.includes('no-store') && middleware.includes('/commander');
+});
+
+// 14. Phase 3 — Functional smoke test: cross-unit access is denied, and the API payload never leaks a forbidden field
+await check('Phase 3 commander view-model denies cross-unit access and never leaks a forbidden field in API payloads', async () => {
+  const { resolveCommanderUnitAccess } = await import('../frontend/src/lib/commander/authorize.js');
+  const { buildApiUnitPayload } = await import('../frontend/src/lib/commander/view-model.js');
+  const { validatePublicReleasePayload } = await import('../backend/src/privacy.js');
+
+  const commander = { id: 'e2e-1', role: 'commander', assignedUnitIds: ['UNIT-A'] };
+  const ownUnit = resolveCommanderUnitAccess({ user: commander, unitId: 'UNIT-A' });
+  const guessedUnit = resolveCommanderUnitAccess({ user: commander, unitId: 'UNIT-B' });
+  if (!ownUnit.allowed) return false;
+  if (guessedUnit.allowed || guessedUnit.httpStatus !== 404) return false;
+
+  const payload = buildApiUnitPayload('UNIT-A', {
+    week_start: '2026-09-07',
+    suppression_status: 'published',
+    index_approx: 42,
+    baseline_approx: 20,
+    band: 'elevated',
+    approved_metrics_json: { recoveryGapPercent: 40 },
+    personnel_id: 'PER-A-001', // simulated accidental leak on the source row
+  });
+  if ('personnel_id' in payload) return false;
+  validatePublicReleasePayload(payload); // throws if a forbidden field is present
+  return true;
+});
+
 console.log('\n--------------------------------------------------------');
 console.log(`Results: ${passedChecks}/${totalChecks} checks passed.`);
 if (failures.length > 0) {
   console.log(`Failures:\n  - ${failures.join('\n  - ')}`);
   process.exit(1);
 } else {
-  console.log('✅ Phase 0-2 verification passed with zero security defects.');
+  console.log('✅ Phase 0-3 verification passed with zero security defects.');
   process.exit(0);
 }

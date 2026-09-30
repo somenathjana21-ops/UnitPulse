@@ -246,19 +246,19 @@ export default function HomePage() {
                 <td><strong>Phase 1</strong></td>
                 <td>Supabase SQL migrations, private schema, RLS policies, synthetic seed generator (6 fictional units, 60 people each)</td>
                 <td>supabase/migrations/, scripts/seed-demo.js</td>
-                <td><span className="status-pill status-pending">SCHEDULED (PHASE 1)</span></td>
+                <td><span className="status-pill status-ready">COMPLETED</span></td>
               </tr>
               <tr>
                 <td><strong>Phase 2</strong></td>
                 <td>Weekly verified metrics pipeline, Laplace noise release job, k-anonymity test fixtures</td>
                 <td>backend/src/release.js, ml/src/scoring.js</td>
-                <td><span className="status-pill status-pending">SCHEDULED (PHASE 2)</span></td>
+                <td><span className="status-pill status-ready">COMPLETED</span></td>
               </tr>
               <tr>
                 <td><strong>Phase 3</strong></td>
                 <td>Commander dashboard (/commander, /commander/units/[id]), trend cards, accessible charts</td>
                 <td>frontend/src/app/commander/</td>
-                <td><span className="status-pill status-pending">SCHEDULED (PHASE 3)</span></td>
+                <td><span className="status-pill status-ready">COMPLETED</span></td>
               </tr>
               <tr>
                 <td><strong>Phase 4</strong></td>

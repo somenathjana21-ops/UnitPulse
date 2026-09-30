@@ -13,7 +13,7 @@
 | **Phase 0** | Scaffold & Environment | Root, `frontend/`, `backend/`, `ml/`, `scripts/`, `.gitignore` | ✅ **COMPLETED** |
 | **Phase 1** | Schema, Roles & Synthetic Seed | `supabase/migrations/`, `scripts/seed-demo.js`, role RLS | ✅ **COMPLETED** |
 | **Phase 2** | Metrics, Index, Baseline & Privacy Release | `backend/src/release.js`, `ml/src/`, Laplace noise, fixtures | ✅ **COMPLETED** |
-| **Phase 3** | Commander Dashboard & Walkthrough | `frontend/src/app/commander/`, trends, cards, accessible charts | ⏳ **PENDING (Phase 3)** |
+| **Phase 3** | Commander Dashboard & Walkthrough | `frontend/src/app/commander/`, trends, cards, accessible charts | ✅ **COMPLETED** |
 | **Phase 4** | Weekly Report & Welfare Workflow | `frontend/src/app/welfare/`, Vercel cron worker, overdue alerts | ⏳ **PENDING (Phase 4)** |
 | **Phase 5** | AI Adapter & Briefing | OpenAI adapter, fallback templates, print-to-PDF export | ⏳ **PENDING (Phase 5)** |
 
@@ -80,18 +80,19 @@
 
 ---
 
-### ⏳ Phase 3 — Commander Dashboard & Walkthrough
-- [ ] **Pages & Layouts (`frontend/src/app/commander/`)**:
-  - [ ] `/commander`: Unit-card grid displaying status bands (`Normal`, `Review`, `Elevated`).
-  - [ ] `/commander/units/[id]`: Weekly trend chart against rolling baseline, leave/night-duty indicators.
-  - [ ] High-contrast accessible charts with text alternatives for colors.
-  - [ ] Clear suppression UI state ("Insufficient group size to show this view").
-  - [ ] "How this works" explanation drawer explaining the 3 Core Principles.
-  - [ ] First-time walkthrough: "See Unit Health &rarr; Understand Possible Contributors &rarr; Consider Supportive Actions".
-- [ ] **Security Enforcement**:
-  - [ ] Route handlers enforce `Cache-Control: no-store`.
-  - [ ] Verify responses contain zero personnel IDs, individual rows, or hidden metrics.
-  - [ ] Cross-unit URL tampering denied with 403/404.
+### ✅ Phase 3 — Commander Dashboard & Walkthrough (Completed)
+- [x] **Pages & Layouts (`frontend/src/app/commander/`)**:
+  - [x] `/commander`: Unit-card grid displaying status bands (`Normal`, `Review`, `Elevated` — UI vocabulary, see D-21).
+  - [x] `/commander/units/[id]`: Weekly trend chart against rolling baseline, leave/night-duty/workload evidence cards.
+  - [x] Accessible chart: inline SVG (decorative) plus a real HTML `<table>` as the primary accessible representation; solid vs. dashed lines so identity is never color-alone.
+  - [x] Clear suppression UI state, wording taken verbatim from docs/04 ("Insufficient group size to show this view.", "Not enough verified data for an index.", "Collecting comparable weeks.").
+  - [x] "How this works" explanation drawer (native `<details>`/`<summary>`, keyboard-operable with no JS).
+  - [x] First-time walkthrough: "See Unit Health → Understand Possible Contributors → Consider Supportive Actions" in the drawer.
+  - [x] Deterministic (non-AI) suggested-action cards using only the 5 permitted categories from docs/07, ahead of the Phase 5 AI adapter.
+- [x] **Security Enforcement**:
+  - [x] `frontend/src/middleware.js` enforces `Cache-Control: no-store` on `/commander/*` and `/api/commander/*` — confirmed for real via `curl -I` against a running dev server, not just code review.
+  - [x] `buildApiUnitPayload()` only ever reads named fields from the release row; tested that an accidental extra field (e.g. `personnel_id`) on the source row never propagates to the API response.
+  - [x] Cross-unit URL tampering denied with 404 (never 403, to avoid confirming a guessed unit exists) — tested that a real neighboring unit and a fully fabricated unit ID produce byte-identical denial responses.
 
 ---
 
