@@ -14,5 +14,6 @@ export * from './metrics.js';
 export * from './release.js';
 export * from './worker.js';
 export * from './ai-adapter.js';
+export * from './csv-import.js';
 export * from './todo.js';
 

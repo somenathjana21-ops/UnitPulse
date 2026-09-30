@@ -65,8 +65,20 @@ export default function TrendChart({ points, hasWithheldWeeks }) {
   const indexSegments = buildSegments(points, 'index');
   const baselineSegments = buildSegments(points, 'baseline');
   const latest = [...points].reverse().find((p) => p.index !== null);
-  const summary = latest
-    ? `Weekly Unit Load and Recovery Index trend across ${count} weeks. Most recent published index: ${latest.index}, baseline: ${latest.baseline ?? 'not yet established'}.`
+  const nonNullIndices = points.filter((p) => p.index !== null).map((p) => p.index);
+  const minIndex = nonNullIndices.length > 0 ? Math.min(...nonNullIndices) : null;
+  const maxIndex = nonNullIndices.length > 0 ? Math.max(...nonNullIndices) : null;
+  const firstIndex = nonNullIndices.length > 0 ? nonNullIndices[0] : null;
+
+  let trendTrajectory = 'stable';
+  if (latest && firstIndex !== null) {
+    if (latest.index >= firstIndex + 8) trendTrajectory = 'elevating (increasing load)';
+    else if (latest.index <= firstIndex - 8) trendTrajectory = 'improving (increasing recovery)';
+  }
+
+  const baselineDiff = latest && latest.baseline !== null ? latest.index - latest.baseline : null;
+  const detailedSummary = latest
+    ? `Weekly Unit Load and Recovery Index trend across ${count} weeks (${trendTrajectory}). Current index: ${latest.index}${latest.baseline !== null ? ` (baseline: ${latest.baseline}, ${baselineDiff >= 0 ? `+${baselineDiff}` : baselineDiff} relative to baseline)` : ''}. Historical range: ${minIndex} to ${maxIndex}.`
     : `Weekly trend across ${count} weeks; no published index in this range.`;
 
   return (
@@ -76,7 +88,7 @@ export default function TrendChart({ points, hasWithheldWeeks }) {
         width="100%"
         height="auto"
         role="img"
-        aria-label={summary}
+        aria-label={detailedSummary}
         aria-hidden="false"
         focusable="false"
       >
@@ -149,6 +161,24 @@ export default function TrendChart({ points, hasWithheldWeeks }) {
           <svg width="16" height="8" aria-hidden="true"><line x1="0" y1="4" x2="16" y2="4" stroke="var(--text-dim)" strokeWidth="2" strokeDasharray="4,3" /></svg>
           {' '}Baseline (approx.)
         </span>
+      </div>
+
+      {/* Accessible Chart Summary Callout */}
+      <div
+        style={{
+          background: 'rgba(255, 255, 255, 0.03)',
+          borderLeft: '3px solid var(--accent-blue)',
+          padding: '0.6rem 0.9rem',
+          margin: '0.85rem 0',
+          borderRadius: '0 4px 4px 0',
+          fontSize: '0.85rem',
+          lineHeight: 1.5,
+        }}
+        role="region"
+        aria-label="Accessible Trend Summary"
+      >
+        <span style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>Accessible Trend Summary: </span>
+        <span style={{ color: 'var(--text-muted)' }}>{detailedSummary}</span>
       </div>
 
       {hasWithheldWeeks && (

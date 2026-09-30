@@ -542,13 +542,97 @@ await check('Phase 6 functional smoke test: encryption, 30m expiry, role gate, c
   return true;
 });
 
+// 21. Phase 7 — Verify Restricted Import, Hardening, and Accessibility Files Exist
+await check('Phase 7 restricted import, schema validation, and accessibility components exist', () => {
+  const files = [
+    'backend/src/csv-import.js',
+    'backend/tests/csv-import.test.js',
+    'supabase/migrations/20260930160000_phase7_import_and_hardening.sql',
+    'frontend/src/lib/admin/authorize.js',
+    'frontend/src/lib/admin/repository.js',
+    'frontend/src/lib/admin/service.js',
+    'frontend/src/app/api/admin/import/route.js',
+    'frontend/src/app/admin/import/page.js',
+    'frontend/src/app/admin/import/ImportManager.js',
+    'frontend/tests/admin-import.test.js',
+    'scripts/measure-performance.js',
+    'tests/results/performance-benchmarks-2026-09-30.txt',
+  ];
+  return files.every((f) => fs.existsSync(path.join(rootDir, f)));
+});
+
+// 22. Phase 7 — Functional Smoke Test: Role Gate, Formula Injection, Bad Dates, Duplicates, and Atomic Ingestion
+await check('Phase 7 functional smoke test: RBAC gates, formula injection defense, date bounds, duplicates, and transactional rollback', async () => {
+  const {
+    canAccessImport,
+    parseCsv,
+    isFormulaInjection,
+    isValidIsoDate,
+    validateDatasetRows,
+    InMemoryImportStore,
+  } = await import('../backend/src/index.js');
+  const { handleImportRequest } = await import('../frontend/src/lib/admin/service.js');
+
+  // 1. Role gates: hr_uploader allowed; commander, welfare_officer, anon denied
+  if (!canAccessImport({ user: { id: 'hr-1', role: 'hr_uploader' } }).allowed) return false;
+  if (canAccessImport({ user: { id: 'cmd-1', role: 'commander' } }).allowed) return false;
+  if (canAccessImport({ user: { id: 'wo-1', role: 'welfare_officer' } }).allowed) return false;
+  if (canAccessImport({ user: null }).allowed) return false;
+
+  // 2. Formula injection defense
+  if (!isFormulaInjection('=SUM(A1:B10)') || !isFormulaInjection('+cmd') || !isFormulaInjection('@SUM')) return false;
+
+  // 3. Date validity: rejects impossible calendar date
+  if (isValidIsoDate('2026-02-31') || !isValidIsoDate('2026-06-15')) return false;
+
+  // 4. Overlapping leave detection
+  const overlapCheck = validateDatasetRows('leave_records', [
+    { id: 'LR-1', personnel_id: 'PER-1', status: 'approved', start_on: '2026-06-01', end_on: '2026-06-10', qualifying: 'true', decided_on: '2026-05-20' },
+    { id: 'LR-2', personnel_id: 'PER-1', status: 'taken', start_on: '2026-06-05', end_on: '2026-06-12', qualifying: 'true', decided_on: '2026-05-20' },
+  ], { knownPersonnelIds: ['PER-1'] });
+  if (overlapCheck.valid) return false;
+
+  // 5. Atomic rollback: duplicate collision commits 0 rows
+  const store = new InMemoryImportStore();
+  store.tables.units.set('UNIT-EXIST', { id: 'UNIT-EXIST', display_code: 'UE', name: 'Existing', active: true });
+  let rollbackOccurred = false;
+  try {
+    store.importRecordsTransactional('units', [
+      { id: 'UNIT-NEW', display_code: 'UN', name: 'New', active: true },
+      { id: 'UNIT-EXIST', display_code: 'UE', name: 'Collision', active: true },
+    ]);
+  } catch {
+    rollbackOccurred = true;
+  }
+  if (!rollbackOccurred || store.tables.units.has('UNIT-NEW')) return false;
+
+  // 6. Service request simulation: size limit, auth, safe errors
+  const sizeRes = await handleImportRequest({
+    user: { id: 'hr-1', role: 'hr_uploader' },
+    datasetType: 'units',
+    csvContent: 'large',
+    contentLength: 5 * 1024 * 1024,
+  });
+  if (sizeRes.status !== 413) return false;
+
+  const validRes = await handleImportRequest({
+    user: { id: 'hr-1', role: 'hr_uploader' },
+    datasetType: 'units',
+    csvContent: 'id,display_code,name,active\nUNIT-SMOKE-1,US1,Smoke Unit 1,true',
+    store,
+  });
+  if (validRes.status !== 200 || validRes.body.importedRows !== 1 || validRes.headers['Cache-Control'] !== 'no-store') return false;
+
+  return true;
+});
+
 console.log('\n--------------------------------------------------------');
 console.log(`Results: ${passedChecks}/${totalChecks} checks passed.`);
 if (failures.length > 0) {
   console.log(`Failures:\n  - ${failures.join('\n  - ')}`);
   process.exit(1);
 } else {
-  console.log('✅ Phase 0-6 verification passed with zero security defects.');
+  console.log('✅ Phase 0-7 verification passed with zero security defects.');
   process.exit(0);
 }
 

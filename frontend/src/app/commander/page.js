@@ -45,6 +45,12 @@ export default async function CommanderPage() {
   const releases = await fetchLatestReleasesForUnits(supabase, user.assignedUnitIds);
   const releaseByUnit = new Map(releases.map((r) => [r.unit_id, r]));
   const unitCards = user.assignedUnitIds.map((unitId) => buildUnitCardViewModel(unitId, releaseByUnit.get(unitId) ?? null));
+  const bandCounts = { Normal: 0, Review: 0, Elevated: 0, Withheld: 0 };
+  for (const c of unitCards) {
+    if (c.isWithheld) bandCounts.Withheld++;
+    else if (c.bandLabel && bandCounts[c.bandLabel] !== undefined) bandCounts[c.bandLabel]++;
+  }
+  const accessibleUnitSummary = `Assigned units overview: ${unitCards.length} unit(s) total (${bandCounts.Normal} Normal, ${bandCounts.Review} Review, ${bandCounts.Elevated} Elevated${bandCounts.Withheld > 0 ? `, ${bandCounts.Withheld} Withheld` : ''}).`;
 
   return (
     <div>
@@ -62,6 +68,29 @@ export default async function CommanderPage() {
         </p>
       </div>
 
+      <div
+        className="card"
+        style={{
+          padding: '0.6rem 1rem',
+          marginBottom: '1.25rem',
+          fontSize: '0.85rem',
+          color: 'var(--text-muted)',
+          display: 'flex',
+          gap: '1.5rem',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+        }}
+        role="region"
+        aria-label="Unit Status Summary"
+      >
+        <span style={{ fontWeight: 600, color: '#fff' }}>Overview:</span>
+        <span>Total: <strong>{unitCards.length}</strong></span>
+        <span>Normal: <strong style={{ color: 'var(--accent-emerald)' }}>{bandCounts.Normal}</strong></span>
+        <span>Review: <strong style={{ color: 'var(--accent-amber)' }}>{bandCounts.Review}</strong></span>
+        <span>Elevated: <strong style={{ color: 'var(--accent-red)' }}>{bandCounts.Elevated}</strong></span>
+        {bandCounts.Withheld > 0 && <span>Withheld: <strong>{bandCounts.Withheld}</strong></span>}
+      </div>
+
       <details className="card" style={{ marginBottom: '2rem' }}>
         <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#fff' }}>How this works</summary>
         <ol style={{ marginTop: '1rem', paddingLeft: '1.25rem', color: 'var(--text-muted)', lineHeight: 1.8 }}>
@@ -72,7 +101,12 @@ export default async function CommanderPage() {
       </details>
 
       {unitCards.length === 0 ? (
-        <p className="card-desc">No units are currently assigned to your account.</p>
+        <div className="card" style={{ textAlign: 'center', padding: '3rem 1.5rem' }}>
+          <h2 className="card-title" style={{ justifyContent: 'center' }}>No Units Assigned</h2>
+          <p className="card-desc" style={{ maxWidth: '400px', margin: '0.5rem auto 0' }}>
+            No operational units are currently assigned to your commander credentials in the unit registry.
+          </p>
+        </div>
       ) : (
         <div className="grid-3">
           {unitCards.map((card) => (

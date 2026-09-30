@@ -1,0 +1,68 @@
+================================================================
+Unit Pulse 2.0 — Phase 7 Verification & Risk Hardening Audit
+Specifications: docs/06, docs/10, docs/11, docs/14
+================================================================
+
+SECTION 1: Malformed CSV Syntax Handling
+  ✅ PASS [Check 1]: Malformed CSV (unclosed quotes) throws error and halts parsing
+     Evidence: parseCsv threw "Malformed CSV: Unclosed quotation mark in input."
+  ✅ PASS [Check 2]: Service returns 422 with malformed_csv error code on bad CSV syntax
+     Evidence: HTTP 422, code: malformed_csv
+
+SECTION 2: CSV Formula Injection Defense (docs/10 safeguard 8 & threat 8)
+  ✅ PASS [Check 3]: Formula characters (=, +, -, @, \t, \r) are detected on all cells
+     Evidence: Tested 7 formula triggers; 100% detected
+  ✅ PASS [Check 4]: Row with formula injection is rejected with safe descriptive message
+     Evidence: Column 'id', row 2: Formula injection detected: Cell starts with forbidden formula character (=, +, -, @, tab, cr).
+
+SECTION 3: Upload Size Limits (docs/11 test plan & DoS protection)
+  ✅ PASS [Check 5]: Payload exceeding 2MB limit is rejected with HTTP 413 Payload Too Large
+     Evidence: HTTP 413, code: payload_too_large
+
+SECTION 4: Calendar Dates & Plausible Bounds Validation
+  ✅ PASS [Check 6]: Impossible calendar date (2026-02-31) is rejected
+     Evidence: Error on row 2, column 'history_start_on': History start date must be a valid calendar date in YYYY-MM-DD format.
+  ✅ PASS [Check 7]: Duty hours outside daily bounds (>24.0) are rejected
+     Evidence: Error on row 2, column 'hours': Duty hours must be a number between 0.0 and 24.0.
+
+SECTION 5: Duplicate Detection & Overlapping Leave (docs/06 quality rules)
+  ✅ PASS [Check 8]: Duplicate duty record on same date for same person is rejected
+     Evidence: Detected duplicate: Duplicate duty record for person on the same date.
+  ✅ PASS [Check 9]: Overlapping leave periods for same person are detected and rejected
+     Evidence: Detected overlap: Overlapping leave period detected for person (overlaps with record at row 2).
+
+SECTION 6: Unauthorized Role Rejections (RBAC Trust Boundaries)
+  ✅ PASS [Check 10]: Commander role is strictly denied import access
+     Evidence: Reason: role_not_hr_uploader
+  ✅ PASS [Check 11]: Welfare Officer role is strictly denied import access
+     Evidence: Reason: role_not_hr_uploader
+  ✅ PASS [Check 12]: Anonymous / unauthenticated caller is denied with 401
+     Evidence: Reason: unauthenticated
+  ✅ PASS [Check 13]: HR Uploader role is permitted
+     Evidence: Access granted
+
+SECTION 7: Transactional Atomicity (Bad CSV commits 0 hidden records)
+  ✅ PASS [Check 14]: Batch collision causes atomic transaction rollback
+     Evidence: importRecordsTransactional threw error on collision
+  ✅ PASS [Check 15]: Zero partially accepted hidden records exist in database store after rollback
+     Evidence: Store size unchanged (1 pre-existing row only; UNIT-FIRST was rolled back)
+
+SECTION 8: Safe Error Summaries (Zero Raw Row Logging)
+  ✅ PASS [Check 16]: Safe error summaries report row and column only; no raw row values logged
+     Evidence: Safe error structure: { row: 2, column: 'id', message: 'Formula injection detected: Cell starts with forbidden formula character (=, +, -, @, tab, cr).' }
+
+SECTION 9: AI Provider Outage & Deterministic Briefing Fallback (docs/14 R-11)
+  ✅ PASS [Check 17]: System produces deterministic safe briefing during AI outage / NO_LLM_MODE
+     Evidence: Briefing generated: summary='Unit UNIT-B shows an elevated strain index relativ...', actions=3
+  ✅ PASS [Check 18]: Briefing includes non-diagnostic safety disclaimer and zero personnel data
+     Evidence: Safety disclaimer verified; zero personnel identifiers
+
+SECTION 10: Cache-Control: no-store Enforcement
+  ✅ PASS [Check 19]: Import API returns Cache-Control: no-store on successful responses
+     Evidence: Cache-Control: no-store
+  ✅ PASS [Check 20]: Import API returns Cache-Control: no-store on error responses
+     Evidence: Cache-Control: no-store
+
+----------------------------------------------------------------
+Phase 7 Verification Complete: 20/20 checks passed.
+================================================================

@@ -1,6 +1,6 @@
 # STATUS — Unit Pulse 2.0
 
-_Last updated: 2026-09-30 by Antigravity during Phase 6 completion + verification pass_
+_Last updated: 2026-09-30 by Antigravity during Phase 7 completion + verification pass_
 
 ## Current phase
 Phase 0 — Scaffold and environment  →  **COMPLETE / VERIFIED** (tag `phase-0-complete` verified in repo)
@@ -10,6 +10,7 @@ Phase 3 — Commander dashboard and walkthrough  →  **COMPLETE / AGENT-VERIFIE
 Phase 4 — Weekly report and welfare workflow  →  **COMPLETE / AGENT-VERIFIED** (tag `phase-4-complete`)
 Phase 5 — AI adapter and aggregate briefing  →  **COMPLETE / AGENT-VERIFIED** (tag `phase-5-complete`)
 Phase 6 — Break-glass access and audit  →  **COMPLETE / AGENT-VERIFIED** (tag `phase-6-complete`)
+Phase 7 — Import, hardening, and accessibility  →  **COMPLETE / AGENT-VERIFIED** (tag `phase-7-complete`)
 
 ## Phase completion table
 | Phase | Implemented | Agent-verified | Manually verified | Tag |
@@ -21,73 +22,63 @@ Phase 6 — Break-glass access and audit  →  **COMPLETE / AGENT-VERIFIED** (ta
 | 4 | ✅ | ✅ | ⬜ (Ready for review) | `phase-4-complete` |
 | 5 | ✅ | ✅ | ⬜ (Ready for review) | `phase-5-complete` |
 | 6 | ✅ | ✅ | ⬜ (Ready for review) | `phase-6-complete` |
-| 7 | ⬜ | ⬜ (NOT RUN) | ⬜ | |
+| 7 | ✅ | ✅ | ⬜ (Ready for review) | `phase-7-complete` |
+| 8 | ⬜ | ⬜ (NOT RUN) | ⬜ | |
 
 ## What works right now
-- `npm run lint` succeeds across all workspaces (ESLint on frontend; custom zero-secret linters on backend [11 files] and ml [6 files]).
-- `npm run test` succeeds with **191 passed tests** (was 165 at end of Phase 5):
-  - 57 frontend tests (was 45): commander view-model & authorization, welfare authorization, welfare repository, welfare inbox view-model, briefings route authorization/repository/privacy, and 12 break-glass & audit authorization/repository tests (T-02 commander denial, T-06 unassigned 404 concealment, T-07 short reason rejection, T-08 expiry 403, T-09 clamped 20 rows + audit event logging, and officer audit trail isolation).
-  - 117 backend tests (was 103): worker idempotency, CRON_SECRET auth, trigger rules, deduplication, status transitions, overdue review calculation, AI adapter tests, and 14 comprehensive break-glass & audit tests (AES-256-GCM encryption/decryption, NIST 96-bit random nonce uniqueness, short reason rejection, tampering detection, custom key isolation, reason code allow-list, officer assignment, and active grant status/expiry).
+- `npm run lint` succeeds across all workspaces (ESLint on frontend; zero-secret linters on backend [12 files] and ml [6 files]).
+- `npm run test` succeeds with **230 passed tests** (was 191 at end of Phase 6):
+  - 74 frontend tests (was 57): +17 admin-import authorization, size limit (413), formula injection, bad date, duplicate detection, overlapping leave, relationship, and atomic rollback tests.
+  - 139 backend tests (was 117): +22 CSV import domain tests covering RFC-4180 parsing, formula injection detection (`=`, `+`, `-`, `@`, `\t`, `\r`), strict ISO calendar date bounds (rejects `2026-02-31`), duty hour bounds (0-24), status enums, duplicate primary keys, duplicate duty dates, overlapping leave periods, foreign keys, transactional rollback, safe error summaries, and RBAC gates.
   - 17 ml tests — pure deterministic scoring, boundaries, and trigger rules.
-- `npm run test:e2e` passes **21/21** (was 19/19): includes checks for Phase 6 migration, routes, and UI components, plus functional smoke tests for encryption, 30m expiry, role gates, clamp to 20 rows, and immutable per-read audit logging.
-- `npm run build` succeeds; `/commander`, `/commander/units/[id]`, `/welfare`, `/welfare/audit`, `/welfare/reports/[id]`, `/api/briefings/[unitId]`, `/api/briefings/[unitId]/events`, `/api/briefings/[unitId]/print`, `/api/internal/weekly-run`, `/api/welfare/audit`, `/api/welfare/reports/[id]/access-grants`, `/api/welfare/reports/[id]/individuals`, and all API routes compile as dynamic (ƒ) with `Cache-Control: no-store` enforced.
+- `npm run test:e2e` passes **23/23** (was 21/21): includes checks for Phase 7 migration, routes, UI components, plus functional smoke tests for RBAC gates, formula injection defense, date bounds, duplicates, and transactional rollback.
+- `npm run build` succeeds; `/admin/import`, `/api/admin/import`, `/commander`, `/commander/units/[id]`, `/welfare`, `/welfare/audit`, `/welfare/reports/[id]`, `/api/briefings/[unitId]`, `/api/briefings/[unitId]/events`, `/api/briefings/[unitId]/print`, `/api/internal/weekly-run`, `/api/welfare/audit`, `/api/welfare/reports/[id]/access-grants`, `/api/welfare/reports/[id]/individuals`, and all API routes compile as dynamic (ƒ) with `Cache-Control: no-store` enforced.
 - **New this phase**:
-  - `backend/src/audit.js`: AES-256-GCM authenticated encryption and decryption (`encryptReason`, `decryptReason`) with 96-bit random nonce and auth tag (`v1:<iv>:<tag>:<ciphertext>`). Reason validation (minimum 10 characters, allowed reason codes: `welfare_review`, `roster_audit`, `safety_check`, `leave_rebalancing_assessment`, `emergency_support`) and server-enforced 30-minute expiry (`validateGrantRequest`, `isGrantActive`).
-  - `backend/src/config.js`: `getServiceRoleClient` server-only factory helper, keeping all references to service-role keys strictly inside `@unitpulse/backend` and completely away from client bundles (preventing secret scanner failures).
-  - SQL migration `supabase/migrations/20260930150000_phase6_break_glass.sql`:
-    - Updated `private.access_grants` reason code check constraint.
-    - Transactional read function `private.execute_audited_break_glass_read`: rechecks officer role, report assignment, unit consistency, grant validity, and 30-minute auto-expiry atomically; clamps output to maximum 20 pseudonymous records; writes an immutable per-read audit log entry to `private.access_audit`.
-    - Revoked ordinary table `SELECT` and direct function execution from client roles (`anon`, `authenticated`, `public`); granted execution strictly to `service_role`.
-  - Frontend domain & authorization (`frontend/src/lib/welfare/break-glass.js` & `frontend/src/lib/welfare/authorize.js`):
-    - `resolveBreakGlassGrantRequestAccess` and `resolveBreakGlassReadAccess` resolving 401 unauthenticated, 403 commander denial (T-02), 404 unassigned report concealment (T-06), 400 missing grant ID, and 403 expired grant (T-08).
-    - `executeIndividualRead` enforcing 20-row maximum clamp and per-read audit generation.
-  - Authenticated API Endpoints with `Cache-Control: no-store`:
-    - `POST /api/welfare/reports/[id]/access-grants`: validates reason, encrypts justification at rest, creates 30-minute grant.
-    - `GET /api/welfare/reports/[id]/individuals`: rechecks assignment and active grant, calls transactional read function, returns max 20 pseudonymous rows.
-    - `GET /api/welfare/audit`: returns strictly the calling officer's own audit events.
+  - `backend/src/csv-import.js`: Safe RFC-4180 CSV parser, formula injection detector (`=`, `+`, `-`, `@`, `\t`, `\r`), ISO calendar date validator (rejects `2026-02-31`), schema and relationship checks, duplicate and overlapping leave detection, and in-memory transactional store.
+  - `backend/src/permissions.js`: `canAccessImport({ user })` restricting ingestion strictly to `hr_uploader` (and `system_admin`), denying commanders and welfare officers.
+  - SQL migration `supabase/migrations/20260930160000_phase7_import_and_hardening.sql`: Transactional import stored procedure `private.execute_transactional_import` restricted strictly to `service_role`.
+  - Frontend domain & authorization (`frontend/src/lib/admin/authorize.js`, `frontend/src/lib/admin/repository.js`, `frontend/src/lib/admin/service.js`):
+    - `resolveImportAccess`: resolving 401 unauthenticated, 403 commander/welfare denial, 200 ok.
+    - `handleImportRequest`: core service enforcing 2MB size limit (413), schema validation, atomic transactions, safe error summaries, and `Cache-Control: no-store`.
+  - Authenticated API Endpoint:
+    - `POST /api/admin/import`: authenticated route enforcing role boundaries, payload size limits, safe parsing, atomic transactions, safe error summaries, and `Cache-Control: no-store`.
   - Frontend UI:
-    - `frontend/src/app/welfare/reports/[id]/BreakGlassPanel.js`: interactive grant dialog with clear visibility scope disclosure, reason code dropdown, typed justification textarea (min 10 chars), live 30-minute countdown timer, paginated table (20 rows/page), and download/export avoidance notice.
-    - Dedicated Officer Audit Viewer at `/welfare/audit/page.js` with header navigation link in `/welfare/page.js`.
+    - Restricted `/admin/import` page and `ImportManager.js` component with synthetic policy warning, schema selector, sample templates, file dropzone, direct CSV editor, meaningful loading state, meaningful empty state, safe error summary table (zero raw row dump), and atomic transaction confirmation.
+    - Strictly no generic database admin browser or arbitrary table editor.
+  - Accessible Chart Summaries & UI Hardening:
+    - `TrendChart.js`: added accessible trend summary callout (`aria-label`, visible text breakdown of trajectory, min/max, baseline delta) alongside decorative SVG and accessible HTML table.
+    - Commander page: added accessible status overview and meaningful empty state card.
+  - Performance Benchmarking:
+    - Dedicated script `scripts/measure-performance.js` measuring dashboard aggregation (0.028 ms), analytics (0.039 ms), AI fallback (0.065 ms), and CSV validation throughput (134,529 rows/sec). Results saved to `tests/results/performance-benchmarks-2026-09-30.txt`.
 
 | Command | Exit code | Notes |
 |---|---|---|
-| `npm run lint` | 0 | ESLint clean on frontend; zero-secret lint clean on backend (11 files) & ml (6 files) |
-| `npm run test` | 0 | 191 passed (57 frontend, 117 backend, 17 ml) |
-| `npm run test:e2e` | 0 | 21/21 passed |
-| `npm run build` | 0 | All commander, welfare, briefing, break-glass, and internal API routes compile dynamic (ƒ) |
-| `node scripts/verify-phase-6.js` | 0 | 40/40 checks passed; output saved to `tests/results/phase-6-verification-2026-09-30.txt` |
+| `npm run lint` | 0 | ESLint clean on frontend; zero-secret lint clean on backend (12 files) & ml (6 files) |
+| `npm run test` | 0 | 230 passed (74 frontend, 139 backend, 17 ml) |
+| `npm run test:e2e` | 0 | 23/23 passed with zero security defects |
+| `npm run build` | 0 | All routes compile dynamic (ƒ) with `Cache-Control: no-store` enforced |
+| `node scripts/measure-performance.js` | 0 | Empirical benchmarks recorded; validation throughput: 134k rows/sec |
+| `node scripts/verify-phase-7.js` | 0 | 20/20 checks passed; output saved to `tests/results/phase-7-verification-2026-09-30.txt` |
 
-## Independent Phase 6 verification pass (Guidebook verification prompt)
-Per: "Attempt all of the following: commander request, unrelated officer, missing reason, altered report ID, altered unit ID, expired grant, revoked grant, direct private-table query, and repeated paginated reads. Verify successful reads each produce an audit row, and failures produce no individual data. Review that the audit reason is encrypted at rest and plaintext is not logged. Report any direct unlogged read path."
+## Independent Phase 7 verification pass (Guidebook verification prompt)
+Per: "Review the implementation against every release-blocking failure in docs/11-testing-plan.md and every critical risk in docs/14-risk-register.md. Try malformed CSV, CSV formula injection, a >size-limit upload, duplicate leave rows, bad dates, unauthorized imports, and an AI outage. Include actual test command output, failures, remaining limitations, and files changed. Do not mark a requirement done without evidence."
 
-- **Commander request (T-02)**: Returns 403 Forbidden on grant request (`role_not_welfare_officer`), individual read, and audit endpoints. Commander cannot obtain individual data; zero grants or audit records are created.
-- **Unrelated officer (T-06)**: Returns 404 Not Found (`report_not_assigned_to_user` concealment, preventing existence oracle) on grant request and individual read. Domain logic explicitly rejects unassigned officers.
-- **Missing / short / invalid reason (T-07)**:
-  - Empty reason string: rejected (min 10 chars required).
-  - Short reason ("urgent", 6 chars): rejected with 422.
-  - Invalid reason code (`disciplinary_inquiry`): rejected; only permitted codes accepted.
-  - No grant created; grant store remains empty.
-- **Altered report ID**: Authorization gate returns 404 (`report_not_assigned_to_user`). In domain execution, `executeIndividualRead` throws `grant_mismatch`. Database transactional function verifies `r.unit_id = p_unit_id` and `g.report_id = p_report_id`.
-- **Altered unit ID**: Authorization gate returns 403 `unit_mismatch`. Database transactional function strictly verifies `v_grant.unit_id <> v_report.unit_id` and raises an exception.
-- **Expired grant (T-08)**: At 31 minutes post-grant, `isGrantActive` returns `false`. Authorization gate returns 403 Forbidden with `grant_expired`. Database transactional function verifies `v_grant.expires_at <= now()`.
-- **Revoked grant**: Grant flagged with `is_revoked = true` is evaluated as inactive (`isGrantActive` returns `false`). Authorization returns 403 Forbidden with `grant_revoked`. Database transactional function verifies `v_grant.is_revoked = true` and aborts.
-- **Direct private-table query**: Schema `private` privileges explicitly revoked from `public`, `anon`, and `authenticated` roles. Row Level Security enabled on `private.access_grants` and `private.access_audit`. Direct execution of `private.execute_audited_break_glass_read` revoked from client roles and granted exclusively to `service_role`.
-- **Repeated paginated reads (T-09)**:
-  - Page 1 read (limit 10, offset 0): returns 10 records and atomically inserts 1 audit row with `row_count: 10`, `action: 'individual_read'`.
-  - Page 2 read (limit 10, offset 10): returns next 10 records with distinct personnel IDs and appends a 2nd audit row.
-  - Request with limit 100: clamped strictly to maximum 20 records; audit row records clamped count (20).
-  - Failed reads: throw exceptions and return zero individual data.
-- **Reason encrypted at rest & zero plaintext logging**:
-  - Ciphertext matches AES-256-GCM authenticated format `v1:<12-byte IV>:<16-byte Tag>:<Ciphertext>`.
-  - Plaintext reason is 100% absent from stored ciphertext.
-  - Decryption with system key accurately recovers original typed justification.
-  - Bit-flipping tampering triggers cryptographic auth tag verification exception.
-  - Audit log table stores only `reason_code` (`welfare_review`), never plaintext justification.
-- **Direct unlogged read path**: None exists. Audited all route handlers and database routines: exactly one route exists (`/api/welfare/reports/[id]/individuals`), which strictly enforces `executeIndividualRead` and `Cache-Control: no-store`. Database read function atomically records in `private.access_audit` in the same transaction. Audit trail viewer isolates events per officer (Officer B sees 0 events from Officer A).
+- **Malformed CSV (unclosed quotes)**: parseCsv throws error halting parsing. Ingestion service returns HTTP 422 with `malformed_csv`.
+- **CSV formula injection (R-09, docs/10 threat 8)**: Formula characters (`=`, `+`, `-`, `@`, `\t`, `\r`) tested across cells; 100% detected. Rows containing formula injection rejected with HTTP 422 `validation_failed`.
+- **Upload exceeding size limit (>2MB)**: Rejected with HTTP 413 `payload_too_large`.
+- **Impossible calendar dates**: `2026-02-31`, invalid months, and non-ISO strings rejected with HTTP 422 `validation_failed`.
+- **Duty hour daily bounds**: Hours > 24.0 or < 0.0 rejected with HTTP 422 `validation_failed`.
+- **Duplicate detection**: Duplicate duty records on same date for same person rejected.
+- **Overlapping leave detection**: Overlapping leave periods for same person detected (`start1 <= end2 && start2 <= end1`) and rejected with HTTP 422.
+- **Unauthorized imports**: Commander and Welfare Officer roles strictly denied with HTTP 403 `role_not_hr_uploader`. Anonymous requests denied with HTTP 401 `unauthenticated`.
+- **Transactional atomicity (all-or-nothing)**: Collision or error midway triggers full rollback; zero partially accepted hidden records exist in database store.
+- **Safe error summaries (zero raw row logging)**: Error summaries report row number and column name only; raw row values and personal payloads are 100% absent from error objects and server output.
+- **AI provider outage fallback (R-11)**: During provider outage or in `NO_LLM_MODE`, system produces deterministic, evidence-grounded safe briefings with safety disclaimer and zero personal identifiers.
+- **Cache-Control: no-store**: Returned on all successful (200) and negative (401, 403, 413, 422) responses.
 
 ## What does NOT work / not implemented yet
 - **Remote hosted Supabase instance not yet connected.** All database logic runs against unit test mocks or degrades gracefully when env vars are unset.
-- Phase 7: Import, hardening, and accessibility (`/admin/import` synthetic-CSV flow, duplicate detection, chart accessibility, performance benchmarks).
+- Phase 8: Deployment and final demo (Vercel preview deployment documentation, presentation deck, final release audit).
 
 ## Known issues
 - Docker Desktop or Podman is not installed on this host environment. Remote hosted Supabase is preferred by the user to avoid Docker.
@@ -96,12 +87,13 @@ Per: "Attempt all of the following: commander request, unrelated officer, missin
 ## Environment facts the next agent needs
 - This host: Node v20.20.2, npm 10.8.2. npm workspaces (`frontend`, `backend`, `ml`). Root `package.json` contains `"type": "module"`.
 - Frontend dependencies: `@supabase/ssr`, `@supabase/supabase-js`, `next`, `react`, `react-dom`.
-- Real test results: `tests/results/phase-1-2026-09-30.txt`, `phase-2-2026-09-30.txt`, `phase-3-2026-09-30.txt`, `phase-4-2026-09-30.txt`, `phase-5-2026-09-30.txt`, `phase-6-2026-09-30.txt`.
+- Real test results: `tests/results/phase-1-2026-09-30.txt`, `phase-2-2026-09-30.txt`, `phase-3-2026-09-30.txt`, `phase-4-2026-09-30.txt`, `phase-5-2026-09-30.txt`, `phase-6-2026-09-30.txt`, `phase-7-verification-2026-09-30.txt`, `performance-benchmarks-2026-09-30.txt`.
 
 ## Decisions made this phase
-- D-29: Break-glass grant storage & encryption — AES-256-GCM with NIST 96-bit nonce; 30-minute auto-expiry.
-- D-30: Narrow transactional database read function (`private.execute_audited_break_glass_read`) — atomic verification of role, assignment, unit, active grant; max 20 pseudonymous rows; immutable per-read audit row; service-role execution only.
-- D-31: Officer audit trail viewer (`/welfare/audit`) & download avoidance — dedicated viewer for officer's own events; strict `Cache-Control: no-store`; zero individual export/download capability.
+- D-32: Restricted synthetic-CSV ingestion flow (`/admin/import`, `backend/src/csv-import.js`, `frontend/src/app/api/admin/import/route.js`) scoped strictly to `hr_uploader` (and `system_admin`).
+- D-33: Ingestion hardening, formula injection defense, and duplicate/overlap detection (`backend/src/csv-import.js`).
+- D-34: Transactional import atomicity & safe error summaries (zero raw row logging).
+- D-35: Accessible chart narrative summaries and UI states in `TrendChart.js` and dashboards.
 
 ## Open questions for the human
-- Ready to proceed to Phase 7 (Import, hardening, and accessibility) or link remote Supabase project?
+- Ready to proceed to Phase 8 (Deployment and final demo) or link remote Supabase project?

@@ -133,3 +133,26 @@ export function canMutateUnitAssignments({ user }) {
 
   return { allowed: false, reason: 'unit_assignments_client_mutations_forbidden' };
 }
+
+/**
+ * Checks whether an actor can access the restricted /admin/import synthetic CSV flow.
+ * Per docs/04-user-flows.md and docs/08-api-specification.md:
+ * Access is restricted strictly to the hr_uploader role (and system_admin).
+ * Commanders, Welfare Officers, and unauthenticated callers are denied.
+ *
+ * @param {Object} params
+ * @param {Object|null} params.user
+ * @returns {{ allowed: boolean, reason?: string }}
+ */
+export function canAccessImport({ user }) {
+  if (!user || !user.id) {
+    return { allowed: false, reason: 'unauthenticated' };
+  }
+
+  if (user.role !== 'hr_uploader' && user.role !== 'system_admin') {
+    return { allowed: false, reason: 'role_not_hr_uploader' };
+  }
+
+  return { allowed: true };
+}
+

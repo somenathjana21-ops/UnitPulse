@@ -21,6 +21,8 @@ export const config = {
     '/api/commander/:path*',
     '/welfare/:path*',
     '/api/welfare/:path*',
+    '/admin/:path*',
+    '/api/admin/:path*',
     '/api/internal/:path*',
     '/api/briefings/:path*',
   ],

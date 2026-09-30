@@ -17,7 +17,8 @@
 | **Phase 4** | Weekly Report & Welfare Workflow | `frontend/src/app/welfare/`, Vercel cron worker, overdue alerts | ✅ **COMPLETED** |
 | **Phase 5** | AI Adapter & Briefing | OpenAI adapter, fallback templates, print-to-PDF export | ✅ **COMPLETED** |
 | **Phase 6** | Break-Glass Access & Audit | 30-min grant, AES-256-GCM encryption, narrow transactional read, officer audit viewer | ✅ **COMPLETED** |
-| **Phase 7** | Import, Hardening & Accessibility | Restricted `/admin/import` synthetic CSV, limits, accessible charts | ⏳ **PENDING (Phase 7)** |
+| **Phase 7** | Import, Hardening & Accessibility | Restricted `/admin/import` synthetic CSV, limits, accessible charts | ✅ **COMPLETED** |
+| **Phase 8** | Deployment & Final Demo | Vercel preview docs, SIH presentation, final audit | ⏳ **PENDING (Phase 8)** |
 
 ---
 
@@ -157,6 +158,44 @@
 
 ---
 
+### ✅ Phase 7 — Import, Hardening & Accessibility (Completed)
+- [x] **Restricted Synthetic Ingestion Domain (`backend/src/csv-import.js`)**:
+  - [x] RFC-4180 compliant CSV parser with quote escaping, comma tolerance, and CRLF handling.
+  - [x] CSV formula injection defense: detects and rejects cells starting with `=`, `+`, `-`, `@`, `\t`, `\r`.
+  - [x] 2MB payload size limit and 5,000 row batch limit.
+  - [x] Strict calendar date validation rejecting impossible dates (e.g. `2026-02-31`).
+  - [x] Daily bounds validation: duty hours strictly between 0.0 and 24.0.
+  - [x] Duplicate detection: primary keys, `(personnel_id, duty_date)` and `(personnel_id, snapshot_week)`.
+  - [x] Overlapping leave detection for the same person (`start1 <= end2 && start2 <= end1`).
+  - [x] Relationship checks: foreign keys must reference valid units and personnel.
+  - [x] Transactional atomicity: bad CSV rolls back entire batch (all-or-nothing, zero partial commits).
+  - [x] Safe error summaries reporting row and column diagnostics; zero raw row logging to stdout/stderr.
+- [x] **RBAC Authorization & API Route (`frontend/src/app/api/admin/import/route.js`)**:
+  - [x] Restricted strictly to `hr_uploader` and `system_admin`.
+  - [x] Rejects commanders (403), welfare officers (403), and unauthenticated callers (401).
+  - [x] Payload size enforcement returning 413 Payload Too Large.
+  - [x] Enforces `Cache-Control: no-store` on all responses via route and middleware matcher.
+- [x] **Frontend UI (`frontend/src/app/admin/import/`)**:
+  - [x] Restricted page with synthetic data policy banner.
+  - [x] Supported dataset selector (`units`, `personnel`, `leave_eligibility`, `leave_records`, `duty_records`, `deployments`).
+  - [x] Meaningful loading state with real-time validation progress.
+  - [x] Meaningful empty state with step-by-step guidance and template loading.
+  - [x] Meaningful safe error summary state with row/column breakdown (zero raw row dump).
+  - [x] Meaningful success state with transaction confirmation.
+  - [x] Strictly no generic database admin browser or arbitrary table editor.
+- [x] **Accessibility & Hardening**:
+  - [x] `TrendChart.js`: added accessible trend summary callout (`aria-label`, visible text breakdown of trajectory, min/max, baseline delta) alongside decorative SVG and accessible HTML table.
+  - [x] Commander page: added accessible status overview and meaningful empty state card.
+  - [x] Welfare page: verified accessible notifications, status badges, and empty states.
+- [x] **Performance Benchmarks (`scripts/measure-performance.js`)**:
+  - [x] Measured dashboard response time (0.028 ms mean, 0.099 ms p95).
+  - [x] Measured weekly deterministic analytics (0.039 ms mean, 0.132 ms p95).
+  - [x] Measured AI deterministic fallback latency (0.065 ms mean, 0.946 ms p95).
+  - [x] Measured synthetic CSV validation throughput (134,529 rows/sec).
+  - [x] Real results recorded in `tests/results/performance-benchmarks-2026-09-30.txt`.
+
+---
+
 ## Release Gate Checklist (Must pass before production deployment)
 - [x] No personnel-level rows returned to commander endpoints.
 - [x] Small groups (<5) and small cells completely suppressed in API and UI.
@@ -164,3 +203,5 @@
 - [x] Cron retries do not duplicate active welfare reports.
 - [x] AI model receives no direct personnel identifiers or unreleased metrics.
 - [x] Zero hardcoded service keys or client-prefixed secrets (`NEXT_PUBLIC_`) in codebase.
+- [x] Ingestion endpoint restricts upload to HR Uploader, enforces 2MB limit, rejects formula injection, and commits zero partial rows on bad CSV.
+
